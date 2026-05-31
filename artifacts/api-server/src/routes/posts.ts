@@ -100,18 +100,27 @@ router.get("/posts/bookmarks", authMiddleware, async (req: AuthRequest, res): Pr
 });
 
 router.get("/posts", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
-  const { hashtag } = req.query as { hashtag?: string };
+  const { hashtag, search } = req.query as { hashtag?: string; search?: string };
   const limit = parseInt(String(req.query.limit ?? "20"), 10);
   const offset = parseInt(String(req.query.offset ?? "0"), 10);
 
-  const posts = await db.select().from(postsTable).orderBy(desc(postsTable.createdAt)).limit(limit).offset(offset);
+  const posts = await db.select().from(postsTable).orderBy(desc(postsTable.createdAt)).limit(100).offset(0);
   let enriched = await Promise.all(posts.map(p => enrichPost(p, req.userId)));
 
   if (hashtag) {
     enriched = enriched.filter(p => p.hashtags.includes(hashtag));
   }
 
-  res.json(enriched);
+  if (search) {
+    const q = search.toLowerCase();
+    enriched = enriched.filter(p =>
+      p.content.toLowerCase().includes(q) ||
+      p.hashtags.some(h => h.toLowerCase().includes(q)) ||
+      p.author.displayName.toLowerCase().includes(q)
+    );
+  }
+
+  res.json(enriched.slice(offset, offset + limit));
 });
 
 router.post("/posts", authMiddleware, async (req: AuthRequest, res): Promise<void> => {

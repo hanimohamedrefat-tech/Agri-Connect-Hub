@@ -8,6 +8,7 @@
 
 export type ListPostsParams = {
 hashtag?: string;
+search?: string;
 limit?: number;
 offset?: number;
 };

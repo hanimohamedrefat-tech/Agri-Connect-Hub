@@ -327,6 +327,7 @@ export const listPostsQueryOffsetDefault = 0;
 
 export const ListPostsQueryParams = zod.object({
   "hashtag": zod.coerce.string().optional(),
+  "search": zod.coerce.string().optional(),
   "limit": zod.coerce.number().default(listPostsQueryLimitDefault),
   "offset": zod.coerce.number().default(listPostsQueryOffsetDefault)
 })
