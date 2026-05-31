@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "زراعة - Agricultural Social Platform"
+version = "1.0.0"
+id = "artifacts/zira3a"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20056
+
+[services.development]
+run = "pnpm --filter @workspace/zira3a run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/zira3a", "run", "build" ]
+publicDir = "artifacts/zira3a/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20056"
+BASE_PATH = "/"

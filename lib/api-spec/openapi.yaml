@@ -1,22 +1,41 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Zira3a - Agricultural Social Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User profiles
+  - name: posts
+    description: Social feed posts
+  - name: comments
+    description: Post comments
+  - name: follows
+    description: Follow relationships
+  - name: notifications
+    description: Notifications
+  - name: conversations
+    description: Direct messages
+  - name: messages
+    description: Messages
+  - name: meetings
+    description: Video meetings
+  - name: feed
+    description: Feed and discovery
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +43,823 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # Users
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: Search / list users
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: specialty
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /users/{username}:
+    get:
+      operationId: getUserByUsername
+      tags: [users]
+      summary: Get user profile by username
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{username}/update:
+    patch:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update own profile
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{username}/posts:
+    get:
+      operationId: listUserPosts
+      tags: [users]
+      summary: Get posts by user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User's posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  /users/{username}/followers:
+    get:
+      operationId: getUserFollowers
+      tags: [users]
+      summary: Get user's followers
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Followers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /users/{username}/following:
+    get:
+      operationId: getUserFollowing
+      tags: [users]
+      summary: Get who user is following
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Following
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /users/suggestions:
+    get:
+      operationId: getSuggestedUsers
+      tags: [users]
+      summary: Get suggested users to follow
+      responses:
+        "200":
+          description: Suggested users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  # Posts
+  /posts:
+    get:
+      operationId: listPosts
+      tags: [posts]
+      summary: List all posts (explore)
+      parameters:
+        - name: hashtag
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Posts list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      operationId: createPost
+      tags: [posts]
+      summary: Create a post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/feed:
+    get:
+      operationId: getFeed
+      tags: [feed]
+      summary: Get personalized feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Feed posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  /posts/trending:
+    get:
+      operationId: getTrendingPosts
+      tags: [feed]
+      summary: Get trending posts and hashtags
+      responses:
+        "200":
+          description: Trending data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrendingData"
+
+  /posts/{postId}:
+    get:
+      operationId: getPost
+      tags: [posts]
+      summary: Get a single post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      summary: Delete a post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /posts/{postId}/like:
+    post:
+      operationId: likePost
+      tags: [posts]
+      summary: Like / unlike a post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeResponse"
+
+  /posts/{postId}/bookmark:
+    post:
+      operationId: bookmarkPost
+      tags: [posts]
+      summary: Bookmark / unbookmark a post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bookmark toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /posts/{postId}/repost:
+    post:
+      operationId: repostPost
+      tags: [posts]
+      summary: Repost a post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Reposted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/bookmarks:
+    get:
+      operationId: getBookmarks
+      tags: [posts]
+      summary: Get bookmarked posts
+      responses:
+        "200":
+          description: Bookmarks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  # Comments
+  /posts/{postId}/comments:
+    get:
+      operationId: listPostComments
+      tags: [comments]
+      summary: Get comments for a post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Add a comment to a post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /comments/{commentId}/like:
+    post:
+      operationId: likeComment
+      tags: [comments]
+      summary: Like / unlike a comment
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeResponse"
+
+  # Follows
+  /follows/{username}:
+    post:
+      operationId: followUser
+      tags: [follows]
+      summary: Follow / unfollow a user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Follow toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowResponse"
+
+  # Notifications
+  /notifications:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      summary: Get notifications
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/summary:
+    get:
+      operationId: getNotificationSummary
+      tags: [notifications]
+      summary: Get unread notification count
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSummary"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # Conversations / Messages
+  /conversations:
+    get:
+      operationId: listConversations
+      tags: [conversations]
+      summary: List conversations
+      responses:
+        "200":
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+    post:
+      operationId: createConversation
+      tags: [conversations]
+      summary: Start a conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationInput"
+      responses:
+        "201":
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+
+  /conversations/{conversationId}/messages:
+    get:
+      operationId: listConversationMessages
+      tags: [messages]
+      summary: Get messages in a conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+    post:
+      operationId: sendMessage
+      tags: [messages]
+      summary: Send a message
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  # Meetings
+  /meetings:
+    get:
+      operationId: listMeetings
+      tags: [meetings]
+      summary: List user's meetings
+      responses:
+        "200":
+          description: Meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+    post:
+      operationId: createMeeting
+      tags: [meetings]
+      summary: Create a meeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "201":
+          description: Meeting created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+
+  /meetings/upcoming:
+    get:
+      operationId: getUpcomingMeetings
+      tags: [meetings]
+      summary: Get upcoming scheduled meetings
+      responses:
+        "200":
+          description: Upcoming meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+
+  /meetings/{meetingId}:
+    get:
+      operationId: getMeeting
+      tags: [meetings]
+      summary: Get meeting details
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+    patch:
+      operationId: updateMeeting
+      tags: [meetings]
+      summary: Update meeting details
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingUpdate"
+      responses:
+        "200":
+          description: Updated meeting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+    delete:
+      operationId: deleteMeeting
+      tags: [meetings]
+      summary: Delete / cancel a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /meetings/join/{joinCode}:
+    post:
+      operationId: joinMeetingByCode
+      tags: [meetings]
+      summary: Join a meeting via join code
+      parameters:
+        - name: joinCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Meeting joined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+
+  /meetings/{meetingId}/participants:
+    get:
+      operationId: getMeetingParticipants
+      tags: [meetings]
+      summary: Get meeting participants
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MeetingParticipant"
+
+  /meetings/{meetingId}/start:
+    post:
+      operationId: startMeeting
+      tags: [meetings]
+      summary: Start a meeting (set status to live)
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+
+  /meetings/{meetingId}/end:
+    post:
+      operationId: endMeeting
+      tags: [meetings]
+      summary: End a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting ended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +867,381 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    # Auth
+    RegisterInput:
+      type: object
+      required: [username, email, password, displayName]
+      properties:
+        username:
+          type: string
+          minLength: 3
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 6
+        displayName:
+          type: string
+        specialty:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    # User
+    User:
+      type: object
+      required: [id, username, displayName, email, followersCount, followingCount, postsCount, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        coverPhoto:
+          type: ["string", "null"]
+        specialty:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        isVerified:
+          type: boolean
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        postsCount:
+          type: integer
+        isFollowing:
+          type: boolean
+        createdAt:
+          type: string
+
+    ProfileUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+        bio:
+          type: string
+        specialty:
+          type: string
+        location:
+          type: string
+        website:
+          type: string
+        avatar:
+          type: string
+        coverPhoto:
+          type: string
+
+    # Posts
+    Post:
+      type: object
+      required: [id, content, authorId, author, likesCount, commentsCount, repostsCount, isLiked, isBookmarked, isRepost, createdAt]
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        authorId:
+          type: integer
+        author:
+          $ref: "#/components/schemas/User"
+        likesCount:
+          type: integer
+        commentsCount:
+          type: integer
+        repostsCount:
+          type: integer
+        isLiked:
+          type: boolean
+        isBookmarked:
+          type: boolean
+        isRepost:
+          type: boolean
+        originalPost:
+          type: ["object", "null"]
+        hashtags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+
+    PostInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+        images:
+          type: array
+          items:
+            type: string
+
+    # Comments
+    Comment:
+      type: object
+      required: [id, postId, authorId, author, content, likesCount, isLiked, createdAt]
+      properties:
+        id:
+          type: integer
+        postId:
+          type: integer
+        authorId:
+          type: integer
+        author:
+          $ref: "#/components/schemas/User"
+        content:
+          type: string
+        likesCount:
+          type: integer
+        isLiked:
+          type: boolean
+        createdAt:
+          type: string
+
+    CommentInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+
+    LikeResponse:
+      type: object
+      required: [liked, likesCount]
+      properties:
+        liked:
+          type: boolean
+        likesCount:
+          type: integer
+
+    FollowResponse:
+      type: object
+      required: [following, followersCount]
+      properties:
+        following:
+          type: boolean
+        followersCount:
+          type: integer
+
+    # Notifications
+    Notification:
+      type: object
+      required: [id, userId, type, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+          enum: [like, comment, follow, repost, mention]
+        actor:
+          $ref: "#/components/schemas/User"
+        postId:
+          type: ["integer", "null"]
+        isRead:
+          type: boolean
+        message:
+          type: string
+        createdAt:
+          type: string
+
+    NotificationSummary:
+      type: object
+      required: [unreadCount]
+      properties:
+        unreadCount:
+          type: integer
+
+    # Conversations and Messages
+    Conversation:
+      type: object
+      required: [id, participants, createdAt]
+      properties:
+        id:
+          type: integer
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        lastMessage:
+          type: ["object", "null"]
+        unreadCount:
+          type: integer
+        createdAt:
+          type: string
+
+    ConversationInput:
+      type: object
+      required: [participantId]
+      properties:
+        participantId:
+          type: integer
+
+    Message:
+      type: object
+      required: [id, conversationId, senderId, sender, content, createdAt]
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        senderId:
+          type: integer
+        sender:
+          $ref: "#/components/schemas/User"
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    MessageInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+
+    # Meetings
+    Meeting:
+      type: object
+      required: [id, hostId, host, title, status, joinCode, participantsCount, createdAt]
+      properties:
+        id:
+          type: integer
+        hostId:
+          type: integer
+        host:
+          $ref: "#/components/schemas/User"
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        scheduledAt:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [scheduled, live, ended]
+        joinCode:
+          type: string
+        participantsCount:
+          type: integer
+        maxParticipants:
+          type: integer
+        isRecording:
+          type: boolean
+        createdAt:
+          type: string
+
+    MeetingInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        scheduledAt:
+          type: string
+        maxParticipants:
+          type: integer
+
+    MeetingUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        scheduledAt:
+          type: string
+        maxParticipants:
+          type: integer
+
+    MeetingParticipant:
+      type: object
+      required: [id, meetingId, userId, user, joinedAt]
+      properties:
+        id:
+          type: integer
+        meetingId:
+          type: integer
+        userId:
+          type: integer
+        user:
+          $ref: "#/components/schemas/User"
+        joinedAt:
+          type: string
+        leftAt:
+          type: ["string", "null"]
+        isMuted:
+          type: boolean
+        isVideoOff:
+          type: boolean
+
+    TrendingData:
+      type: object
+      required: [hashtags, posts]
+      properties:
+        hashtags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendingHashtag"
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+
+    TrendingHashtag:
+      type: object
+      required: [tag, count]
+      properties:
+        tag:
+          type: string
+        count:
+          type: integer
