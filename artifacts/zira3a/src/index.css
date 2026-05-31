@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -67,31 +67,27 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE */
-:root {
+/* ===================== GREEN THEME (default) ===================== */
+:root,
+[data-theme="green"] {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  /* Warm soil/earth base */
   --background: 45 20% 96%;
   --foreground: 140 40% 15%;
-
   --border: 45 20% 88%;
   --input: 45 20% 88%;
   --ring: 142 60% 30%;
 
-  /* Deep organic greens for primary */
   --primary: 142 60% 30%;
   --primary-foreground: 0 0% 100%;
 
-  /* Warm earth tones for secondary */
   --secondary: 30 35% 45%;
   --secondary-foreground: 0 0% 100%;
 
-  /* Cards and surfaces slightly lighter than background */
   --card: 45 20% 98%;
   --card-foreground: 140 40% 15%;
   --card-border: 45 20% 88%;
@@ -103,7 +99,6 @@
   --muted: 45 15% 90%;
   --muted-foreground: 140 20% 40%;
 
-  /* Golden wheat for accent */
   --accent: 45 90% 50%;
   --accent-foreground: 140 50% 15%;
 
@@ -125,17 +120,16 @@
   --chart-4: 160 40% 40%;
   --chart-5: 20 50% 50%;
 
-  --app-font-sans: 'Cairo', sans-serif;
+  --app-font-sans: 'Cairo', 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'IBM Plex Mono', monospace;
-  --radius: 0.5rem;
-  
+  --radius: 0.625rem;
+
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
-  /* Automatically computed borders */
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
@@ -145,52 +139,255 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* ===================== OCEAN BLUE THEME ===================== */
+[data-theme="ocean"] {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  --background: 210 30% 97%;
+  --foreground: 215 50% 15%;
+  --border: 210 25% 88%;
+  --input: 210 25% 88%;
+  --ring: 210 80% 45%;
+
+  --primary: 210 80% 45%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 195 60% 40%;
+  --secondary-foreground: 0 0% 100%;
+
+  --card: 210 30% 99%;
+  --card-foreground: 215 50% 15%;
+  --card-border: 210 25% 88%;
+
+  --popover: 210 30% 99%;
+  --popover-foreground: 215 50% 15%;
+  --popover-border: 210 25% 88%;
+
+  --muted: 210 20% 92%;
+  --muted-foreground: 215 25% 45%;
+
+  --accent: 190 80% 45%;
+  --accent-foreground: 215 50% 10%;
+
+  --destructive: 0 70% 45%;
+  --destructive-foreground: 0 0% 100%;
+
+  --sidebar: 215 60% 18%;
+  --sidebar-foreground: 210 30% 97%;
+  --sidebar-border: 215 60% 24%;
+  --sidebar-primary: 190 80% 50%;
+  --sidebar-primary-foreground: 215 50% 10%;
+  --sidebar-accent: 215 55% 24%;
+  --sidebar-accent-foreground: 210 30% 95%;
+  --sidebar-ring: 190 80% 50%;
+
+  --chart-1: 210 80% 45%;
+  --chart-2: 195 60% 40%;
+  --chart-3: 190 80% 45%;
+  --chart-4: 225 60% 55%;
+  --chart-5: 180 55% 40%;
+
+  --app-font-sans: 'Cairo', 'Inter', sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: 'IBM Plex Mono', monospace;
+  --radius: 0.625rem;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+/* ===================== VIOLET PURPLE THEME ===================== */
+[data-theme="violet"] {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  --background: 270 20% 97%;
+  --foreground: 275 45% 15%;
+  --border: 270 18% 88%;
+  --input: 270 18% 88%;
+  --ring: 265 70% 50%;
+
+  --primary: 265 70% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 290 45% 45%;
+  --secondary-foreground: 0 0% 100%;
+
+  --card: 270 20% 99%;
+  --card-foreground: 275 45% 15%;
+  --card-border: 270 18% 88%;
+
+  --popover: 270 20% 99%;
+  --popover-foreground: 275 45% 15%;
+  --popover-border: 270 18% 88%;
+
+  --muted: 270 15% 92%;
+  --muted-foreground: 275 22% 45%;
+
+  --accent: 310 70% 50%;
+  --accent-foreground: 275 45% 10%;
+
+  --destructive: 0 70% 45%;
+  --destructive-foreground: 0 0% 100%;
+
+  --sidebar: 275 55% 18%;
+  --sidebar-foreground: 270 20% 97%;
+  --sidebar-border: 275 55% 24%;
+  --sidebar-primary: 310 70% 55%;
+  --sidebar-primary-foreground: 275 45% 10%;
+  --sidebar-accent: 275 50% 24%;
+  --sidebar-accent-foreground: 270 20% 95%;
+  --sidebar-ring: 310 70% 55%;
+
+  --chart-1: 265 70% 50%;
+  --chart-2: 290 45% 45%;
+  --chart-3: 310 70% 50%;
+  --chart-4: 245 65% 55%;
+  --chart-5: 330 55% 50%;
+
+  --app-font-sans: 'Cairo', 'Inter', sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: 'IBM Plex Mono', monospace;
+  --radius: 0.625rem;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+/* ===================== DARK OVERRIDES per theme ===================== */
 .dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
+}
 
-  /* Deep dark earth */
+/* Dark Green */
+.dark,
+.dark[data-theme="green"] {
   --background: 140 40% 6%;
   --foreground: 45 20% 90%;
-
   --border: 140 30% 15%;
   --input: 140 30% 15%;
   --ring: 142 50% 40%;
-
   --primary: 142 50% 40%;
   --primary-foreground: 140 40% 6%;
-
   --secondary: 30 30% 30%;
   --secondary-foreground: 45 20% 90%;
-
   --card: 140 40% 8%;
   --card-foreground: 45 20% 90%;
   --card-border: 140 30% 15%;
-
   --popover: 140 40% 8%;
   --popover-foreground: 45 20% 90%;
   --popover-border: 140 30% 15%;
-
   --muted: 140 30% 12%;
   --muted-foreground: 45 10% 60%;
-
   --accent: 45 80% 45%;
   --accent-foreground: 140 40% 6%;
-
   --destructive: 0 60% 40%;
   --destructive-foreground: 45 20% 90%;
-
-  --sidebar: 140 40% 6%;
+  --sidebar: 140 45% 6%;
   --sidebar-foreground: 45 20% 90%;
-  --sidebar-border: 140 30% 15%;
+  --sidebar-border: 140 30% 14%;
   --sidebar-primary: 45 80% 45%;
   --sidebar-primary-foreground: 140 40% 6%;
   --sidebar-accent: 140 30% 12%;
   --sidebar-accent-foreground: 45 20% 90%;
   --sidebar-ring: 45 80% 45%;
+}
+
+/* Dark Ocean */
+.dark[data-theme="ocean"] {
+  --background: 215 50% 7%;
+  --foreground: 210 25% 90%;
+  --border: 215 40% 16%;
+  --input: 215 40% 16%;
+  --ring: 210 75% 50%;
+  --primary: 210 75% 50%;
+  --primary-foreground: 215 50% 7%;
+  --secondary: 195 55% 30%;
+  --secondary-foreground: 210 25% 90%;
+  --card: 215 50% 9%;
+  --card-foreground: 210 25% 90%;
+  --card-border: 215 40% 16%;
+  --popover: 215 50% 9%;
+  --popover-foreground: 210 25% 90%;
+  --popover-border: 215 40% 16%;
+  --muted: 215 38% 13%;
+  --muted-foreground: 210 15% 60%;
+  --accent: 190 75% 45%;
+  --accent-foreground: 215 50% 7%;
+  --destructive: 0 60% 40%;
+  --destructive-foreground: 210 25% 90%;
+  --sidebar: 218 55% 7%;
+  --sidebar-foreground: 210 25% 90%;
+  --sidebar-border: 215 40% 15%;
+  --sidebar-primary: 190 75% 48%;
+  --sidebar-primary-foreground: 215 50% 7%;
+  --sidebar-accent: 215 38% 13%;
+  --sidebar-accent-foreground: 210 25% 90%;
+  --sidebar-ring: 190 75% 48%;
+}
+
+/* Dark Violet */
+.dark[data-theme="violet"] {
+  --background: 275 45% 7%;
+  --foreground: 270 20% 90%;
+  --border: 275 35% 16%;
+  --input: 275 35% 16%;
+  --ring: 265 65% 55%;
+  --primary: 265 65% 55%;
+  --primary-foreground: 275 45% 7%;
+  --secondary: 290 40% 30%;
+  --secondary-foreground: 270 20% 90%;
+  --card: 275 45% 9%;
+  --card-foreground: 270 20% 90%;
+  --card-border: 275 35% 16%;
+  --popover: 275 45% 9%;
+  --popover-foreground: 270 20% 90%;
+  --popover-border: 275 35% 16%;
+  --muted: 275 32% 13%;
+  --muted-foreground: 270 12% 60%;
+  --accent: 310 65% 52%;
+  --accent-foreground: 275 45% 7%;
+  --destructive: 0 60% 40%;
+  --destructive-foreground: 270 20% 90%;
+  --sidebar: 278 50% 7%;
+  --sidebar-foreground: 270 20% 90%;
+  --sidebar-border: 275 35% 15%;
+  --sidebar-primary: 310 65% 55%;
+  --sidebar-primary-foreground: 275 45% 7%;
+  --sidebar-accent: 275 32% 13%;
+  --sidebar-accent-foreground: 270 20% 90%;
+  --sidebar-ring: 310 65% 55%;
 }
 
 @layer base {
@@ -205,79 +402,48 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  html[lang="en"] body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  html[lang="ar"] body {
+    font-family: 'Cairo', sans-serif;
+  }
 }
 
-
-/**
- * Using the elevate system.
- * Automatic contrast adjustment.
- *
- * <element className="hover-elevate" />
- * <element className="active-elevate-2" />
- *
- * // Using the tailwind utility when a data attribute is "on"
- * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
- * // Or manually controlling the toggle state
- * <element className="toggle-elevate toggle-elevated" />
- *
- * Elevation systems have to handle many states.
- * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
- * - toggled or not
- * - focused or not (this is not handled with these utilities)
- *
- * Even without handling focused or not, this is six possible combinations that
- * need to be distinguished from eachother visually.
- */
 @layer utilities {
-
-  /* Hide ugly search cancel button in Chrome until we can style it properly */
   input[type="search"]::-webkit-search-cancel-button {
     @apply hidden;
   }
 
-  /* Placeholder styling for contentEditable div */
   [contenteditable][data-placeholder]:empty::before {
     content: attr(data-placeholder);
     color: hsl(var(--muted-foreground));
     pointer-events: none;
   }
 
-  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
-   * buttons/badges can remove the automatic brightness adjustment on interactions
-   * and program their own. */
   .no-default-hover-elevate {}
-
   .no-default-active-elevate {}
 
-
-  /**
-   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
-   * This way they can stack/compound. Both will overlap the parent's borders!
-   * So borders will be automatically adjusted both on toggle, and hover/active,
-   * and they will be compounded.
-   */
   .toggle-elevate::before,
   .toggle-elevate-2::before {
     content: "";
     pointer-events: none;
     position: absolute;
     inset: 0px;
-    /*border-radius: inherit;   match rounded corners */
     border-radius: inherit;
     z-index: -1;
-    /* sits behind content but above backdrop */
   }
 
   .toggle-elevate.toggle-elevated::before {
     background-color: var(--elevate-2);
   }
 
-  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
   .border.toggle-elevate::before {
     inset: -1px;
   }
 
-  /* Does not work on elements with overflow:hidden! */
   .hover-elevate:not(.no-default-hover-elevate),
   .active-elevate:not(.no-default-active-elevate),
   .hover-elevate-2:not(.no-default-hover-elevate),
@@ -294,10 +460,8 @@
     pointer-events: none;
     position: absolute;
     inset: 0px;
-    /*border-radius: inherit;   match rounded corners */
     border-radius: inherit;
     z-index: 999;
-    /* sits in front of content */
   }
 
   .hover-elevate:hover:not(.no-default-hover-elevate)::after,
@@ -310,12 +474,27 @@
     background-color: var(--elevate-2);
   }
 
-  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
   .border.active-elevate:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+
+  /* Post card animations */
+  @keyframes likeAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+
+  .like-animate {
+    animation: likeAnimation 0.3s ease;
+  }
+
+  /* Smooth post action transitions */
+  .post-action-btn {
+    @apply flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200;
   }
 }

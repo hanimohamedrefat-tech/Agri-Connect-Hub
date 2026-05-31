@@ -6,6 +6,8 @@ import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout/AppLayout";
 import AuthPage from "@/pages/auth";
 import { SocketProvider } from "@/context/SocketContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { LangProvider } from "@/context/LangContext";
 
 import Feed from "@/pages/feed";
 import Explore from "@/pages/explore";
@@ -34,10 +36,10 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={AuthPage} />
-      
+
       {/* Special route without standard app layout */}
       <Route path="/meetings/:meetingId/room" component={MeetingRoom} />
-      
+
       <Route>
         <AppLayout>
           <Switch>
@@ -64,14 +66,18 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <SocketProvider>
-            <Router />
-          </SocketProvider>
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <ThemeProvider>
+        <LangProvider>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <SocketProvider>
+                <Router />
+              </SocketProvider>
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </LangProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
