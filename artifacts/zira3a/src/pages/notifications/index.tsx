@@ -46,7 +46,7 @@ export default function Notifications() {
       <div className="divide-y divide-border/50">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">جاري تحميل الإشعارات...</div>
-        ) : notifications?.length ? (
+        ) : Array.isArray(notifications) && notifications.length > 0 ? (
           notifications.map(notif => (
             <Link key={notif.id} href={notif.postId ? `/post/${notif.postId}` : (notif.actor ? `/profile/${notif.actor.username}` : '#')} className={`p-4 flex gap-4 transition-colors hover:bg-muted/10 ${!notif.isRead ? 'bg-primary/5' : ''}`}>
               <div className="pt-1">

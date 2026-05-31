@@ -74,7 +74,7 @@ export default function Meetings() {
           
           {isLoading ? (
             <div className="p-8 text-center text-muted-foreground">جاري تحميل الاجتماعات...</div>
-          ) : meetings?.length ? (
+          ) : Array.isArray(meetings) && meetings.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {meetings.map(meeting => (
                 <Card key={meeting.id} className="transition-all hover:border-primary/50 group">

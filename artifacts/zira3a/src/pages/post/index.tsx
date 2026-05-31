@@ -138,7 +138,7 @@ export default function PostDetail() {
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
           </div>
-        ) : !comments?.length ? (
+        ) : !Array.isArray(comments) || comments.length === 0 ? (
           <div className="py-12 text-center">
             <MessageCircle className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">

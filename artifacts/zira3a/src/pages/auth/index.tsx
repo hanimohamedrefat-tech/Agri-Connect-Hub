@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useLogin, useRegister, useGetMe } from "@workspace/api-client-react";
 import { setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Leaf } from "lucide-react";
 
@@ -24,11 +24,15 @@ export default function AuthPage() {
   const [regDisplayName, setRegDisplayName] = useState("");
   const [regSpecialty, setRegSpecialty] = useState("");
 
+  // Redirect in effect, not during render
+  useEffect(() => {
+    if (!checkingAuth && user) {
+      setLocation("/feed");
+    }
+  }, [user, checkingAuth, setLocation]);
+
   if (checkingAuth) return null;
-  if (user) {
-    setLocation("/feed");
-    return null;
-  }
+  if (user) return null;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

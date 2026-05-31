@@ -29,7 +29,7 @@ export default function Explore() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {suggested?.slice(0, 4).map(user => (
+            {Array.isArray(suggested) && suggested.slice(0, 4).map(user => (
               <div key={user.id} className="bg-card border border-border/40 p-3 rounded-2xl flex items-center justify-between hover:bg-muted/30 transition-colors">
                 <Link href={`/profile/${user.username}`} className="flex items-center gap-2 min-w-0">
                   <Avatar className="w-10 h-10 border border-border/30">
@@ -65,7 +65,7 @@ export default function Explore() {
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {trending?.hashtags?.map((tag, i) => (
+            {Array.isArray(trending?.hashtags) && trending.hashtags.map((tag, i) => (
               <div
                 key={i}
                 className="bg-primary/8 hover:bg-primary/15 text-primary border border-primary/20 px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5 cursor-pointer transition-colors text-sm"

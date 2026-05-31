@@ -1,1 +1,2 @@
 - [Socket.io architecture](socket-architecture.md) — Socket.io path is `/api/socket.io`; JWT auth via socket.handshake.auth.token; rooms: user:{id}, conversation:{id}, meeting:{id}
+- [Database schema push required](db-schema-push.md) — run `pnpm --filter @workspace/db run push` on fresh import; tables don't auto-create, causing 500 "Failed query" errors

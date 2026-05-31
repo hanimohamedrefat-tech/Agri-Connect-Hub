@@ -67,7 +67,7 @@ export default function Messages() {
       <div className="divide-y divide-border/50">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">جاري تحميل الرسائل...</div>
-        ) : conversations?.length ? (
+        ) : Array.isArray(conversations) && conversations.length > 0 ? (
           conversations.map(conv => {
             const otherParticipant = conv.participants.find(p => p.id !== user?.id) || conv.participants[0];
             return (

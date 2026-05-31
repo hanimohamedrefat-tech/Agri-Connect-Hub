@@ -152,7 +152,7 @@ export default function Feed() {
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
             <span className="text-sm">{t.loadingPosts}</span>
           </div>
-        ) : posts?.length ? (
+        ) : Array.isArray(posts) && posts.length > 0 ? (
           posts.map(post => (
             <PostCard key={post.id} post={post} />
           ))

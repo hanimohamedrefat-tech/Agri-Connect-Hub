@@ -212,7 +212,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Right Sidebar */}
       <aside className="hidden lg:flex flex-col w-80 p-4 gap-4 sticky top-0 h-screen overflow-y-auto">
         {/* Trending Topics */}
-        {trending && trending.hashtags && trending.hashtags.length > 0 && (
+        {trending && Array.isArray(trending.hashtags) && trending.hashtags.length > 0 && (
           <div className="bg-muted/40 rounded-2xl p-4 border border-border/30">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-primary" />
@@ -233,7 +233,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Suggested Users */}
-        {suggested && suggested.length > 0 && (
+        {Array.isArray(suggested) && suggested.length > 0 && (
           <div className="bg-muted/40 rounded-2xl p-4 border border-border/30">
             <div className="flex items-center gap-2 mb-3">
               <UserPlus className="w-4 h-4 text-primary" />
