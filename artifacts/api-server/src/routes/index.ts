@@ -9,12 +9,14 @@ import notificationsRouter from "./notifications";
 import conversationsRouter from "./conversations";
 import meetingsRouter from "./meetings";
 import userPostsRouter from "./userPosts";
+import uploadRouter from "./upload";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
 router.use(usersRouter);
+router.use(uploadRouter);
 router.use(postsRouter);
 router.use(commentsRouter);
 router.use(followsRouter);

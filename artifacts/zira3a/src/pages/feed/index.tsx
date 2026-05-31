@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useGetFeed, useCreatePost, useGetMe } from "@workspace/api-client-react";
 import { PostCard } from "@/components/shared/PostCard";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Image as ImageIcon, Smile, MapPin, Hash, Loader2 } from "lucide-react";
+import { Image as ImageIcon, Smile, MapPin, Hash, Loader2, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetFeedQueryKey } from "@workspace/api-client-react";
 import { useLang } from "@/context/LangContext";
+import { getToken } from "@/lib/auth";
 
 export default function Feed() {
   const { data: user } = useGetMe();
@@ -15,17 +16,67 @@ export default function Feed() {
   const queryClient = useQueryClient();
   const [content, setContent] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { t, lang } = useLang();
 
-  const handlePost = () => {
-    if (!content.trim()) return;
-    createPostMutation.mutate({ data: { content } }, {
-      onSuccess: () => {
-        setContent("");
-        setIsFocused(false);
-        queryClient.invalidateQueries({ queryKey: getGetFeedQueryKey() });
-      }
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const remaining = 4 - images.length;
+    const toAdd = files.slice(0, remaining);
+    const newImages = toAdd.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setImages((prev) => [...prev, ...newImages]);
+    e.target.value = "";
+  };
+
+  const removeImage = useCallback((index: number) => {
+    setImages((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
     });
+  }, []);
+
+  const handlePost = async () => {
+    if (!content.trim() && images.length === 0) return;
+
+    let uploadedUrls: string[] = [];
+
+    if (images.length > 0) {
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        images.forEach(({ file }) => formData.append("images", file));
+        const token = getToken();
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        const data = await res.json();
+        uploadedUrls = data.urls;
+      } catch {
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+
+    createPostMutation.mutate(
+      { data: { content, images: uploadedUrls.length > 0 ? uploadedUrls : undefined } },
+      {
+        onSuccess: () => {
+          setContent("");
+          setImages([]);
+          setIsFocused(false);
+          queryClient.invalidateQueries({ queryKey: getGetFeedQueryKey() });
+        },
+      }
+    );
   };
 
   const charCount = content.length;
@@ -33,6 +84,8 @@ export default function Feed() {
   const remaining = maxChars - charCount;
   const isOverLimit = remaining < 0;
   const isNearLimit = remaining < 50 && remaining >= 0;
+  const isPending = isUploading || createPostMutation.isPending;
+  const canPost = (content.trim() || images.length > 0) && !isOverLimit && !isPending;
 
   return (
     <div className="flex flex-col h-full min-h-screen">
@@ -65,10 +118,48 @@ export default function Feed() {
                 dir={lang === "ar" ? "rtl" : "ltr"}
               />
 
+              {/* Image previews */}
+              {images.length > 0 && (
+                <div className={`grid gap-1.5 rounded-2xl overflow-hidden border border-border/30 ${
+                  images.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                }`}>
+                  {images.map((img, i) => (
+                    <div key={i} className="relative overflow-hidden group/img">
+                      <img
+                        src={img.preview}
+                        alt=""
+                        className="w-full object-cover"
+                        style={{ maxHeight: images.length === 1 ? "320px" : "160px" }}
+                      />
+                      <button
+                        onClick={() => removeImage(i)}
+                        className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity hover:bg-black/80"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {isFocused && (
                 <div className="flex items-center justify-between border-t border-border/40 pt-3">
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-primary rounded-full hover:bg-primary/10">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleImageSelect}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 text-primary rounded-full hover:bg-primary/10"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={images.length >= 4}
+                    >
                       <ImageIcon className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="w-8 h-8 text-primary rounded-full hover:bg-primary/10">
@@ -85,7 +176,6 @@ export default function Feed() {
                   <div className="flex items-center gap-3">
                     {charCount > 0 && (
                       <div className="flex items-center gap-2">
-                        {/* Circular progress */}
                         <div className="relative w-7 h-7">
                           <svg className="w-7 h-7 -rotate-90" viewBox="0 0 28 28">
                             <circle cx="14" cy="14" r="10" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted/40" />
@@ -108,11 +198,11 @@ export default function Feed() {
                     )}
                     <Button
                       onClick={handlePost}
-                      disabled={!content.trim() || isOverLimit || createPostMutation.isPending}
+                      disabled={!canPost}
                       size="sm"
                       className="rounded-full px-5 font-bold h-8 text-sm"
                     >
-                      {createPostMutation.isPending ? (
+                      {isPending ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : t.post}
                     </Button>
@@ -123,7 +213,20 @@ export default function Feed() {
               {!isFocused && (
                 <div className="flex items-center justify-between pt-1">
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="w-8 h-8 text-primary rounded-full hover:bg-primary/10">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleImageSelect}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 text-primary rounded-full hover:bg-primary/10"
+                      onClick={() => { setIsFocused(true); fileInputRef.current?.click(); }}
+                    >
                       <ImageIcon className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="w-8 h-8 text-primary rounded-full hover:bg-primary/10">
@@ -132,7 +235,7 @@ export default function Feed() {
                   </div>
                   <Button
                     onClick={handlePost}
-                    disabled={!content.trim()}
+                    disabled={!canPost}
                     size="sm"
                     className="rounded-full px-5 font-bold h-8 text-sm"
                   >
