@@ -44,18 +44,27 @@ export function createSocketServer(httpServer: HTTPServer) {
       socket.leave(`conversation:${conversationId}`);
     });
 
-    socket.on("join:meeting", (meetingId: number) => {
-      socket.join(`meeting:${meetingId}`);
-      io.to(`meeting:${meetingId}`).emit("meeting:participant_joined", {
+    socket.on("join:meeting", ({ meetingId, displayName }: { meetingId: number; displayName?: string }) => {
+      const roomName = `meeting:${meetingId}`;
+      if (displayName) socket.data.displayName = displayName;
+
+      // Tell existing participants to initiate WebRTC offers to the new joiner
+      socket.to(roomName).emit("webrtc:peer_ready", { fromUserId: userId, meetingId });
+
+      socket.join(roomName);
+
+      // Broadcast presence update to all (excluding sender)
+      socket.to(roomName).emit("meeting:participant_joined", {
         userId,
         displayName: socket.data.displayName ?? "مشارك",
         meetingId,
       });
     });
 
-    socket.on("leave:meeting", (meetingId: number) => {
-      io.to(`meeting:${meetingId}`).emit("meeting:participant_left", { userId, meetingId });
-      socket.leave(`meeting:${meetingId}`);
+    socket.on("leave:meeting", ({ meetingId }: { meetingId: number }) => {
+      const roomName = `meeting:${meetingId}`;
+      socket.to(roomName).emit("meeting:participant_left", { userId, meetingId });
+      socket.leave(roomName);
     });
 
     socket.on("meeting:chat", ({ meetingId, content }: { meetingId: number; content: string }) => {
@@ -65,6 +74,26 @@ export function createSocketServer(httpServer: HTTPServer) {
         content,
         timestamp: new Date().toISOString(),
       });
+    });
+
+    // ── WebRTC signaling relay ──────────────────────────────────────────────
+
+    socket.on("webrtc:offer", ({ targetUserId, meetingId, offer }: {
+      targetUserId: number; meetingId: number; offer: unknown;
+    }) => {
+      io.to(`user:${targetUserId}`).emit("webrtc:offer", { fromUserId: userId, meetingId, offer });
+    });
+
+    socket.on("webrtc:answer", ({ targetUserId, meetingId, answer }: {
+      targetUserId: number; meetingId: number; answer: unknown;
+    }) => {
+      io.to(`user:${targetUserId}`).emit("webrtc:answer", { fromUserId: userId, meetingId, answer });
+    });
+
+    socket.on("webrtc:ice-candidate", ({ targetUserId, meetingId, candidate }: {
+      targetUserId: number; meetingId: number; candidate: unknown;
+    }) => {
+      io.to(`user:${targetUserId}`).emit("webrtc:ice-candidate", { fromUserId: userId, meetingId, candidate });
     });
 
     socket.on("disconnect", () => {
