@@ -2,9 +2,21 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { getSocket } from "@/lib/socket";
 
 const ICE_SERVERS: RTCIceServer[] = [
+  // Google — أكثر STUN موثوقية ومجانية
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
   { urls: "stun:stun2.l.google.com:19302" },
+  { urls: "stun:stun3.l.google.com:19302" },
+  { urls: "stun:stun4.l.google.com:19302" },
+  // Cloudflare — سريع وموثوق
+  { urls: "stun:stun.cloudflare.com:3478" },
+  // Twilio free STUN
+  { urls: "stun:global.stun.twilio.com:3478" },
+  // Open Relay
+  { urls: "stun:stun.stunprotocol.org:3478" },
+  // Voip providers
+  { urls: "stun:stun.voip.blackberry.com:3478" },
+  { urls: "stun:stun.sipnet.ru:3478" },
 ];
 
 export interface UseWebRTCOptions {
