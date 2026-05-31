@@ -1,4 +1,4 @@
-import { useGetMe } from "@workspace/api-client-react";
+import { useGetMe, getGetNotificationSummaryQueryKey } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
 import { 
   Home, 
@@ -13,22 +13,35 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { clearToken } from "@/lib/auth";
+import { useSocket } from "@/context/SocketContext";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLocation as useWouterLocation } from "wouter";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading } = useGetMe();
   const [, setLocation] = useLocation();
+  const [location] = useWouterLocation();
+  const { unreadNotifications, clearUnread } = useSocket();
+  const queryClient = useQueryClient();
 
   const handleLogout = () => {
     clearToken();
     setLocation("/");
   };
 
+  useEffect(() => {
+    if (location === "/notifications") {
+      clearUnread();
+      queryClient.invalidateQueries({ queryKey: getGetNotificationSummaryQueryKey() });
+    }
+  }, [location]);
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!user) {
-    // If not logged in, redirect handled in components or just render children for auth pages
     return <>{children}</>;
   }
 
@@ -36,7 +49,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { icon: Home, label: "الرئيسية", href: "/feed" },
     { icon: Compass, label: "استكشف", href: "/explore" },
     { icon: Video, label: "الاجتماعات", href: "/meetings" },
-    { icon: Bell, label: "الإشعارات", href: "/notifications" },
+    { icon: Bell, label: "الإشعارات", href: "/notifications", badge: unreadNotifications },
     { icon: MessageSquare, label: "الرسائل", href: "/messages" },
     { icon: Bookmark, label: "المحفوظات", href: "/bookmarks" },
     { icon: Settings, label: "الإعدادات", href: "/settings" },
@@ -57,7 +70,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <nav className="space-y-2">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-muted transition-colors text-foreground font-medium text-lg">
-                <item.icon className="w-6 h-6" />
+                <div className="relative">
+                  <item.icon className="w-6 h-6" />
+                  {item.badge != null && item.badge > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                      {item.badge > 99 ? "99+" : item.badge}
+                    </span>
+                  )}
+                </div>
                 <span>{item.label}</span>
               </Link>
             ))}

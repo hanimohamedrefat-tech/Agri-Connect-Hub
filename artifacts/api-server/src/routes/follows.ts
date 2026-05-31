@@ -3,6 +3,7 @@ import { db, usersTable, followsTable, notificationsTable } from "@workspace/db"
 import { eq, and, sql } from "drizzle-orm";
 import { authMiddleware, type AuthRequest } from "../middlewares/auth";
 import { getUserWithCounts } from "./users";
+import { emitToUser } from "../lib/socket";
 
 const router: IRouter = Router();
 
@@ -26,12 +27,13 @@ router.post("/follows/:username", authMiddleware, async (req: AuthRequest, res):
     res.json({ following: false, followersCount: cnt?.count ?? 0 });
   } else {
     await db.insert(followsTable).values({ followerId: req.userId!, followingId: target.id });
-    await db.insert(notificationsTable).values({
+    const [notif] = await db.insert(notificationsTable).values({
       userId: target.id,
       actorId: req.userId!,
       type: "follow",
       message: "بدأ يتابعك",
-    });
+    }).returning();
+    emitToUser(target.id, "new:notification", notif);
     const [cnt] = await db.select({ count: sql<number>`count(*)::int` }).from(followsTable).where(eq(followsTable.followingId, target.id));
     res.json({ following: true, followersCount: cnt?.count ?? 0 });
   }

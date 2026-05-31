@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout/AppLayout";
 import AuthPage from "@/pages/auth";
+import { SocketProvider } from "@/context/SocketContext";
 
 import Feed from "@/pages/feed";
 import Explore from "@/pages/explore";
@@ -65,7 +66,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
+          <SocketProvider>
+            <Router />
+          </SocketProvider>
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

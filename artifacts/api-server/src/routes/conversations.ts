@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, conversationsTable, conversationParticipantsTable, messagesTable, usersTable } from "@workspace/db";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { authMiddleware, type AuthRequest } from "../middlewares/auth";
+import { emitToConversation } from "../lib/socket";
 
 const router: IRouter = Router();
 
@@ -145,6 +146,42 @@ router.post("/conversations/:conversationId/messages", authMiddleware, async (re
   }).returning();
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, msg.senderId));
+
+  const participants = await db.select({ userId: conversationParticipantsTable.userId })
+    .from(conversationParticipantsTable).where(eq(conversationParticipantsTable.conversationId, conversationId));
+  const otherParticipant = participants.find(p => p.userId !== req.userId);
+  if (otherParticipant) {
+    emitToUser(otherParticipant.userId, "new:message_notification", { conversationId });
+  }
+
+  const msgPayload = {
+    id: msg.id,
+    conversationId: msg.conversationId,
+    senderId: msg.senderId,
+    sender: user ? {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      email: user.email,
+      bio: user.bio,
+      avatar: user.avatar,
+      coverPhoto: user.coverPhoto,
+      specialty: user.specialty,
+      location: user.location,
+      website: user.website,
+      isVerified: user.isVerified,
+      followersCount: 0,
+      followingCount: 0,
+      postsCount: 0,
+      isFollowing: false,
+      createdAt: user.createdAt.toISOString(),
+    } : null,
+    content: msg.content,
+    createdAt: msg.createdAt.toISOString(),
+  };
+
+  emitToConversation(conversationId, "new:message", msgPayload);
+
   res.status(201).json({
     id: msg.id,
     conversationId: msg.conversationId,

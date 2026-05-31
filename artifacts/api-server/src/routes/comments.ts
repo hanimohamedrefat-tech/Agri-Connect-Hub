@@ -3,6 +3,7 @@ import { db, commentsTable, commentLikesTable, postsTable, notificationsTable } 
 import { eq, and, sql, desc } from "drizzle-orm";
 import { authMiddleware, optionalAuth, type AuthRequest } from "../middlewares/auth";
 import { getUserWithCounts } from "./users";
+import { emitToUser } from "../lib/socket";
 
 const router: IRouter = Router();
 
@@ -54,13 +55,14 @@ router.post("/posts/:postId/comments", authMiddleware, async (req: AuthRequest, 
   }).returning();
 
   if (post.authorId !== req.userId) {
-    await db.insert(notificationsTable).values({
+    const [notif] = await db.insert(notificationsTable).values({
       userId: post.authorId,
       actorId: req.userId!,
       type: "comment",
       postId,
       message: "علق على منشورك",
-    });
+    }).returning();
+    emitToUser(post.authorId, "new:notification", notif);
   }
 
   const author = await getUserWithCounts(comment.authorId, req.userId);

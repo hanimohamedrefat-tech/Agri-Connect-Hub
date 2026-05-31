@@ -1,0 +1,1 @@
+- [Socket.io architecture](socket-architecture.md) — Socket.io path is `/api/socket.io`; JWT auth via socket.handshake.auth.token; rooms: user:{id}, conversation:{id}, meeting:{id}

@@ -9,6 +9,7 @@ import { useGetMe } from "@workspace/api-client-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useQueryClient } from "@tanstack/react-query";
+import { getSocket, connectSocket } from "@/lib/socket";
 
 export default function Conversation() {
   const params = useParams();
@@ -27,6 +28,23 @@ export default function Conversation() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    connectSocket();
+    const socket = getSocket();
+    socket.emit("join:conversation", conversationId);
+
+    const handleNewMessage = () => {
+      queryClient.invalidateQueries({ queryKey: getListConversationMessagesQueryKey(conversationId) });
+    };
+
+    socket.on("new:message", handleNewMessage);
+
+    return () => {
+      socket.off("new:message", handleNewMessage);
+      socket.emit("leave:conversation", conversationId);
+    };
+  }, [conversationId]);
 
   const handleSend = (e?: React.FormEvent) => {
     e?.preventDefault();

@@ -3,6 +3,7 @@ import { db, postsTable, postLikesTable, bookmarksTable, usersTable, followsTabl
 import { eq, and, inArray, desc, sql } from "drizzle-orm";
 import { authMiddleware, optionalAuth, type AuthRequest } from "../middlewares/auth";
 import { getUserWithCounts } from "./users";
+import { emitToUser } from "../lib/socket";
 
 const router: IRouter = Router();
 
@@ -167,13 +168,14 @@ router.post("/posts/:postId/like", authMiddleware, async (req: AuthRequest, res)
   } else {
     await db.insert(postLikesTable).values({ postId, userId: req.userId! });
     if (post.authorId !== req.userId) {
-      await db.insert(notificationsTable).values({
+      const [notif] = await db.insert(notificationsTable).values({
         userId: post.authorId,
         actorId: req.userId!,
         type: "like",
         postId,
         message: "أعجب بمنشورك",
-      });
+      }).returning();
+      emitToUser(post.authorId, "new:notification", notif);
     }
   }
 
@@ -211,13 +213,14 @@ router.post("/posts/:postId/repost", authMiddleware, async (req: AuthRequest, re
   }).returning();
 
   if (original.authorId !== req.userId) {
-    await db.insert(notificationsTable).values({
+    const [notif] = await db.insert(notificationsTable).values({
       userId: original.authorId,
       actorId: req.userId!,
       type: "repost",
       postId,
       message: "أعاد نشر منشورك",
-    });
+    }).returning();
+    emitToUser(original.authorId, "new:notification", notif);
   }
 
   const enriched = await enrichPost(repost, req.userId);
