@@ -70,6 +70,7 @@ const translations = {
     repliesHere: "الردود ستظهر هنا",
     mediaHere: "الوسائط ستظهر هنا",
     userNotFound: "المستخدم غير موجود",
+    stats: "الإحصائيات",
   },
   en: {
     home: "Home",
@@ -138,6 +139,7 @@ const translations = {
     repliesHere: "Replies will appear here",
     mediaHere: "Media will appear here",
     userNotFound: "User not found",
+    stats: "Stats",
   },
 };
 

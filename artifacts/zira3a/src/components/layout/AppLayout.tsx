@@ -18,6 +18,7 @@ import {
   Sparkles,
   TrendingUp,
   UserPlus,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -77,6 +78,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { icon: Bell, label: t.notifications, href: "/notifications", badge: unreadNotifications },
     { icon: MessageSquare, label: t.messages, href: "/messages" },
     { icon: Bookmark, label: t.bookmarks, href: "/bookmarks" },
+    { icon: BarChart3, label: t.stats, href: "/stats" },
     { icon: Settings, label: t.settings, href: "/settings" },
   ];
 

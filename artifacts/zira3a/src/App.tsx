@@ -22,6 +22,7 @@ import NewMeeting from "@/pages/meetings/new";
 import MeetingDetail from "@/pages/meetings/detail";
 import MeetingRoom from "@/pages/meetings/room";
 import Settings from "@/pages/settings";
+import Stats from "@/pages/stats";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,7 @@ function Router() {
             <Route path="/meetings/new" component={NewMeeting} />
             <Route path="/meetings/:meetingId" component={MeetingDetail} />
             <Route path="/settings" component={Settings} />
+            <Route path="/stats" component={Stats} />
             <Route component={NotFound} />
           </Switch>
         </AppLayout>

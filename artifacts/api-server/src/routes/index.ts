@@ -10,10 +10,12 @@ import conversationsRouter from "./conversations";
 import meetingsRouter from "./meetings";
 import userPostsRouter from "./userPosts";
 import uploadRouter from "./upload";
+import statsRouter from "./stats";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(statsRouter);
 router.use(authRouter);
 router.use(usersRouter);
 router.use(uploadRouter);
