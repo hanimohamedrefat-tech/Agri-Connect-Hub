@@ -116,7 +116,7 @@ router.get("/posts", optionalAuth, async (req: AuthRequest, res): Promise<void> 
     enriched = enriched.filter(p =>
       p.content.toLowerCase().includes(q) ||
       p.hashtags.some(h => h.toLowerCase().includes(q)) ||
-      p.author.displayName.toLowerCase().includes(q)
+      (p.author?.displayName ?? "").toLowerCase().includes(q)
     );
   }
 

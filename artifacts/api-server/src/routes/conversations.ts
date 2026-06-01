@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, conversationsTable, conversationParticipantsTable, messagesTable, usersTable } from "@workspace/db";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { authMiddleware, type AuthRequest } from "../middlewares/auth";
-import { emitToConversation } from "../lib/socket";
+import { emitToConversation, emitToUser } from "../lib/socket";
 
 const router: IRouter = Router();
 
