@@ -26,13 +26,13 @@ args = "API Server"
 name = "API Server"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "console"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PORT=8080 BASE_PATH=/api pnpm --filter @workspace/api-server run dev"
+args = "cd artifacts/api-server && PORT=8080 NODE_ENV=development pnpm run build && PORT=8080 NODE_ENV=development node --enable-source-maps ./dist/index.mjs"
 waitForPort = 8080
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [agent]
 stack = "BEST_EFFORT_FALLBACK"
@@ -50,6 +50,10 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
 [[ports]]
 localPort = 8081
