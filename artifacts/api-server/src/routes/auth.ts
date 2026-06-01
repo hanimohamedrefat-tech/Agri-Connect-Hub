@@ -164,6 +164,34 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   res.json({ user: sanitizeUser(user), token });
 });
 
+// POST /auth/otp-login  — passwordless login after OTP verification
+router.post("/auth/otp-login", async (req, res): Promise<void> => {
+  const { email, otp } = req.body as { email: string; otp: string };
+  if (!email || !otp) {
+    res.status(400).json({ error: "البريد والكود مطلوبان" });
+    return;
+  }
+  const key = email.trim().toLowerCase();
+  const stored = otpStore.get(key);
+  if (!stored || Date.now() > stored.expiresAt) {
+    res.status(400).json({ error: "الكود منتهي الصلاحية أو غير صحيح" });
+    return;
+  }
+  if (stored.otp !== otp) {
+    res.status(400).json({ error: "الكود غير صحيح" });
+    return;
+  }
+  otpStore.delete(key);
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, key));
+  if (!user) {
+    res.status(404).json({ error: "لا يوجد حساب بهذا البريد" });
+    return;
+  }
+  const token = signToken(user.id);
+  logger.info({ userId: user.id }, "User logged in via OTP");
+  res.json({ user: sanitizeUser(user), token });
+});
+
 // POST /auth/reset-password
 router.post("/auth/reset-password", async (req, res): Promise<void> => {
   const { email, newPassword } = req.body as { email: string; newPassword: string };

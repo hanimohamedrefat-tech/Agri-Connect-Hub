@@ -300,6 +300,11 @@ export interface StoryInput {
   caption?: string;
 }
 
+export interface OtpLoginInput {
+  email: string;
+  otp: string;
+}
+
 export interface ResetPasswordInput {
   email: string;
   /** @minLength 6 */

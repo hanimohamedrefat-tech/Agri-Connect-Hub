@@ -31,6 +31,7 @@ export * from './messageResponse';
 export * from './notification';
 export * from './notificationSummary';
 export * from './notificationType';
+export * from './otpLoginInput';
 export * from './otpSentResult';
 export * from './otpVerifyResult';
 export * from './post';

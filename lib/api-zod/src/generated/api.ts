@@ -103,6 +103,38 @@ export const LogoutResponse = zod.object({
 
 
 /**
+ * @summary Login with email + OTP (passwordless)
+ */
+export const OtpLoginBody = zod.object({
+  "email": zod.string(),
+  "otp": zod.string()
+})
+
+export const OtpLoginResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "avatar": zod.string().nullish(),
+  "coverPhoto": zod.string().nullish(),
+  "specialty": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "isVerified": zod.boolean().optional(),
+  "followersCount": zod.number(),
+  "followingCount": zod.number(),
+  "postsCount": zod.number(),
+  "isFollowing": zod.boolean().optional(),
+  "createdAt": zod.string()
+}),
+  "token": zod.string()
+})
+
+
+/**
  * @summary Reset password without OTP
  */
 export const resetPasswordBodyNewPasswordMin = 6;

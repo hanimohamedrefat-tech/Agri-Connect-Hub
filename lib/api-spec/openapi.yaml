@@ -136,6 +136,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+  /auth/otp-login:
+    post:
+      operationId: otpLogin
+      tags: [auth]
+      summary: Login with email + OTP (passwordless)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpLoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid or expired OTP
+        "404":
+          description: User not found
+
   /auth/reset-password:
     post:
       operationId: resetPassword
@@ -1485,6 +1508,15 @@ components:
         imageUrl:
           type: string
         caption:
+          type: string
+
+    OtpLoginInput:
+      type: object
+      required: [email, otp]
+      properties:
+        email:
+          type: string
+        otp:
           type: string
 
     ResetPasswordInput:

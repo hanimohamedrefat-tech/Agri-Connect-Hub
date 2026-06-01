@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { useLogin, useRegister, useGetMe, useSendOtp, useVerifyOtp, useResetPassword } from "@workspace/api-client-react";
+import { useRegister, useGetMe, useSendOtp, useOtpLogin } from "@workspace/api-client-react";
 import { setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowRight, ArrowLeft, Eye, EyeOff, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, ChevronDown } from "lucide-react";
 import { ZiraBrand } from "@/components/ZiraLogo";
 
 // ── OTP Input (6 boxes) ───────────────────────────────────────────────────
@@ -59,68 +59,56 @@ const SPECIALTIES = [
   "طالب زراعة", "صاحب مشروع زراعي", "أخرى",
 ];
 
-type Step = "identifier" | "otp" | "password" | "register" | "reset-password" | "reset-done";
+type Step = "email" | "otp" | "register";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { data: user, isLoading: checkingAuth } = useGetMe();
-  const loginMutation = useLogin();
   const registerMutation = useRegister();
   const sendOtpMutation = useSendOtp();
-  const verifyOtpMutation = useVerifyOtp();
-  const resetPasswordMutation = useResetPassword();
+  const otpLoginMutation = useOtpLogin();
 
-  const [step, setStep] = useState<Step>("identifier");
-  const [identifier, setIdentifier] = useState("");
+  const [step, setStep] = useState<Step>("email");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [demoCode, setDemoCode] = useState<string | null>(null);
   const [userExists, setUserExists] = useState(false);
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [error, setError] = useState("");
-  const [showClassic, setShowClassic] = useState(false);
 
-  // Register
+  // Register fields
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [showRegPass, setShowRegPass] = useState(false);
 
-  // Classic login
-  const [classicEmail, setClassicEmail] = useState("");
-  const [classicPass, setClassicPass] = useState("");
-  const [showClassicPass, setShowClassicPass] = useState(false);
-
-  // Reset password
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetNewPass, setResetNewPass] = useState("");
-  const [resetConfirmPass, setResetConfirmPass] = useState("");
-  const [showResetPass, setShowResetPass] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-
   useEffect(() => {
     if (!checkingAuth && user) setLocation("/feed");
   }, [user, checkingAuth, setLocation]);
 
+  // ── OTP auto-submit ───────────────────────────────────────────────────────
   const submitOtp = useCallback((code: string) => {
     if (code.replace(/\s/g, "").length < 6) return;
     setOtpError("");
-    verifyOtpMutation.mutate(
-      { data: { emailOrPhone: identifier.trim(), otp: code.trim() } },
-      {
-        onSuccess: (res) => {
-          if (!res.valid) { setOtpError("الكود غير صحيح، حاول مجدداً"); return; }
-          setStep(userExists ? "password" : "register");
-        },
-        onError: () => setOtpError("الكود غير صحيح أو منتهي الصلاحية"),
-      },
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identifier, userExists]);
 
-  // Auto-submit OTP on 6 digits
+    if (userExists) {
+      // Existing user → OTP login directly
+      otpLoginMutation.mutate(
+        { data: { email: email.trim(), otp: code.trim() } },
+        {
+          onSuccess: (res) => { setToken(res.token); window.location.href = "/feed"; },
+          onError: () => setOtpError("الكود غير صحيح أو منتهي الصلاحية"),
+        },
+      );
+    } else {
+      // New user → go to register step (OTP already confirmed implicitly by server)
+      // We store OTP so we can attach it to registration if needed — for now just proceed
+      setStep("register");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, userExists]);
+
   useEffect(() => {
     if (step === "otp" && otp.length === 6 && !otp.includes(" ")) {
       submitOtp(otp);
@@ -130,14 +118,14 @@ export default function AuthPage() {
   if (checkingAuth) return null;
   if (user) return null;
 
-  const isPhone = /^[+\d]/.test(identifier) && !identifier.includes("@");
-
+  // ── Step: email ───────────────────────────────────────────────────────────
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!identifier.trim()) return;
+    const val = email.trim();
+    if (!val || !val.includes("@")) { setError("أدخل بريداً إلكترونياً صحيحاً"); return; }
     setError("");
     sendOtpMutation.mutate(
-      { data: { emailOrPhone: identifier.trim() } },
+      { data: { emailOrPhone: val } },
       {
         onSuccess: (res) => {
           setUserExists(res.userExists);
@@ -150,25 +138,20 @@ export default function AuthPage() {
     );
   };
 
-  const handlePasswordLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    loginMutation.mutate(
-      { data: { email: identifier.trim(), password } },
-      {
-        onSuccess: (res) => { setToken(res.token); window.location.href = "/feed"; },
-        onError: () => setError("كلمة المرور غير صحيحة"),
-      },
-    );
-  };
-
+  // ── Step: register ────────────────────────────────────────────────────────
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const emailVal = isPhone ? `${Date.now()}@zira3a.app` : identifier.trim();
-    const phoneVal = isPhone ? identifier.trim() : undefined;
     registerMutation.mutate(
-      { data: { email: emailVal, username: username.trim(), password: regPassword, displayName: displayName.trim(), specialty: specialty || undefined, phone: phoneVal } },
+      {
+        data: {
+          email: email.trim(),
+          username: username.trim(),
+          password: regPassword,
+          displayName: displayName.trim(),
+          specialty: specialty || undefined,
+        },
+      },
       {
         onSuccess: (res) => { setToken(res.token); window.location.href = "/feed"; },
         onError: (err: unknown) => {
@@ -179,366 +162,196 @@ export default function AuthPage() {
     );
   };
 
-  const handleClassicLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    loginMutation.mutate(
-      { data: { email: classicEmail, password: classicPass } },
-      {
-        onSuccess: (res) => { setToken(res.token); window.location.href = "/feed"; },
-        onError: () => setError("البريد أو كلمة المرور غير صحيحة"),
-      },
-    );
-  };
-
-  const handleResetPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (resetNewPass !== resetConfirmPass) {
-      setError("كلمتا المرور غير متطابقتين");
-      return;
-    }
-    if (resetNewPass.length < 6) {
-      setError("كلمة المرور يجب أن تكون ٦ أحرف على الأقل");
-      return;
-    }
-    resetPasswordMutation.mutate(
-      { data: { email: resetEmail.trim(), newPassword: resetNewPass } },
-      {
-        onSuccess: () => { setStep("reset-done"); },
-        onError: (err: unknown) => {
-          const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-          setError(msg ?? "حدث خطأ، تحقق من البريد وحاول مجدداً");
-        },
-      },
-    );
-  };
-
+  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
-      {/* Background glows */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 -left-16 w-64 h-64 bg-emerald-500/5 rounded-full blur-2xl" />
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-sm space-y-6">
 
-      <div className="relative z-10 flex flex-col min-h-screen">
-
-        {/* Header */}
-        <div className="px-6 pt-8 pb-4">
-          <ZiraBrand size={46} lang="ar" showTagline />
+        {/* Brand */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <ZiraBrand size="lg" />
+          <p className="text-sm text-muted-foreground">
+            {step === "email" && "أدخل بريدك الإلكتروني للدخول أو التسجيل"}
+            {step === "otp" && (userExists ? "أهلاً بعودتك! أدخل الكود لتسجيل الدخول" : "حساب جديد — أدخل الكود للمتابعة")}
+            {step === "register" && "أكمل بياناتك لإنشاء حسابك"}
+          </p>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center px-6 pb-10 max-w-md mx-auto w-full">
-
-          {/* ── IDENTIFIER ── */}
-          {step === "identifier" && !showClassic && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <div>
-                <h1 className="text-3xl font-black text-foreground mb-2">أهلاً بك 👋</h1>
-                <p className="text-muted-foreground">سجّل دخولك أو أنشئ حساباً جديداً</p>
-              </div>
-
-              <form onSubmit={handleSendOtp} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-foreground">البريد الإلكتروني أو رقم الهاتف</label>
-                  <Input
-                    type="text"
-                    inputMode="email"
-                    placeholder="example@email.com أو 01xxxxxxxxx"
-                    value={identifier}
-                    onChange={e => { setIdentifier(e.target.value); setError(""); }}
-                    className="h-12 text-sm rounded-xl border-border/60 bg-muted/20"
-                    autoFocus
-                    dir="ltr"
-                  />
-                  {error && <p className="text-sm text-destructive">{error}</p>}
-                </div>
-                <Button type="submit" className="w-full h-12 font-bold rounded-xl gap-2" disabled={!identifier.trim() || sendOtpMutation.isPending}>
-                  {sendOtpMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <>متابعة <ArrowLeft className="w-4 h-4" /></>}
-                </Button>
-              </form>
-
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-border/50" />
-                <span className="text-xs text-muted-foreground">أو</span>
-                <div className="flex-1 h-px bg-border/50" />
-              </div>
-
-              <button
-                onClick={() => { setShowClassic(true); setError(""); }}
-                className="w-full h-12 rounded-xl border border-border/60 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border transition-colors"
-              >
-                تسجيل الدخول بكلمة المرور
-              </button>
+        {/* ── STEP: email ─────────────────────────────────────────── */}
+        {step === "email" && (
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">البريد الإلكتروني</label>
+              <Input
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                dir="ltr"
+                placeholder="name@example.com"
+                value={email}
+                onChange={e => { setEmail(e.target.value); setError(""); }}
+                className="h-11 text-base"
+                autoFocus
+              />
             </div>
-          )}
+            {error && <p className="text-sm text-destructive text-center">{error}</p>}
+            <Button
+              type="submit"
+              className="w-full h-11 text-base font-bold"
+              disabled={sendOtpMutation.isPending}
+            >
+              {sendOtpMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "متابعة"}
+            </Button>
+          </form>
+        )}
 
-          {/* ── CLASSIC LOGIN ── */}
-          {step === "identifier" && showClassic && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <button onClick={() => { setShowClassic(false); setError(""); }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowRight className="w-4 h-4" /> رجوع
-              </button>
-              <div>
-                <h1 className="text-2xl font-black mb-1">تسجيل الدخول</h1>
-                <p className="text-sm text-muted-foreground">ادخل بريدك وكلمة مرورك</p>
-              </div>
-              <form onSubmit={handleClassicLogin} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">البريد الإلكتروني</label>
-                  <Input type="email" value={classicEmail} onChange={e => setClassicEmail(e.target.value)} className="h-12 rounded-xl bg-muted/20" placeholder="example@email.com" dir="ltr" autoFocus />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">كلمة المرور</label>
-                  <div className="relative">
-                    <Input type={showClassicPass ? "text" : "password"} value={classicPass} onChange={e => setClassicPass(e.target.value)} className="h-12 rounded-xl bg-muted/20 pe-10" placeholder="••••••••" />
-                    <button type="button" onClick={() => setShowClassicPass(v => !v)} className="absolute inset-y-0 left-3 flex items-center text-muted-foreground hover:text-foreground">
-                      {showClassicPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full h-12 font-bold rounded-xl" disabled={loginMutation.isPending}>
-                  {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "دخول"}
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => { setResetEmail(classicEmail); setStep("reset-password"); setError(""); }}
-                  className="w-full text-sm text-center text-muted-foreground hover:text-primary transition-colors"
-                >
-                  نسيت كلمة المرور؟
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* ── OTP ── */}
-          {step === "otp" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <button onClick={() => { setStep("identifier"); setOtp(""); setDemoCode(null); setOtpError(""); }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowRight className="w-4 h-4" /> رجوع
-              </button>
-              <div>
-                <h1 className="text-2xl font-black mb-2">تحقق من هويتك 🔐</h1>
-                <p className="text-sm text-muted-foreground">
-                  أرسلنا كود التحقق إلى <span className="font-bold text-foreground" dir="ltr">{identifier}</span>
+        {/* ── STEP: otp ───────────────────────────────────────────── */}
+        {step === "otp" && (
+          <div className="space-y-5">
+            <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-3 text-center">
+              <p className="text-sm text-muted-foreground">
+                أرسلنا كود التحقق إلى
+              </p>
+              <p className="font-bold text-foreground mt-0.5" dir="ltr">{email}</p>
+              {demoCode && (
+                <p className="text-xs text-muted-foreground mt-1 font-mono bg-muted/50 rounded px-2 py-1 inline-block">
+                  كود تجريبي: {demoCode}
                 </p>
-              </div>
+              )}
+            </div>
 
-              <div className="space-y-5">
-                {demoCode && (
-                  <div className="rounded-xl border-2 border-dashed border-amber-400/60 bg-amber-50/10 px-4 py-3 text-center space-y-1">
-                    <p className="text-xs text-amber-600 font-semibold">وضع التطوير — كود التحقق:</p>
-                    <p className="text-2xl font-black tracking-[0.3em] text-amber-500" dir="ltr">{demoCode}</p>
-                  </div>
-                )}
-                <OtpInput value={otp} onChange={v => { setOtp(v); setOtpError(""); }} />
-                {otpError && <p className="text-sm text-destructive text-center">{otpError}</p>}
-                <Button
-                  className="w-full h-12 font-bold rounded-xl"
-                  onClick={() => submitOtp(otp)}
-                  disabled={otp.length < 6 || verifyOtpMutation.isPending}
-                >
-                  {verifyOtpMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "تأكيد الكود"}
-                </Button>
-              </div>
+            <OtpInput value={otp} onChange={setOtp} />
 
+            {otpError && <p className="text-sm text-destructive text-center">{otpError}</p>}
+
+            {(otpLoginMutation.isPending) && (
+              <div className="flex items-center justify-center gap-2 text-primary text-sm">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>جاري تسجيل الدخول...</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between text-sm">
               <button
-                className="w-full text-sm text-muted-foreground text-center hover:text-foreground transition-colors"
-                onClick={() => sendOtpMutation.mutate({ data: { emailOrPhone: identifier } }, { onSuccess: r => setDemoCode(r.demoCode ?? null) })}
+                type="button"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => { setStep("email"); setOtp(""); setOtpError(""); }}
+              >
+                تغيير البريد
+              </button>
+              <button
+                type="button"
+                className="text-primary hover:text-primary/80 font-semibold transition-colors"
+                onClick={() => {
+                  sendOtpMutation.mutate(
+                    { data: { emailOrPhone: email.trim() } },
+                    {
+                      onSuccess: (res) => {
+                        setDemoCode(res.demoCode ?? null);
+                        setOtp("");
+                        setOtpError("");
+                      },
+                    },
+                  );
+                }}
                 disabled={sendOtpMutation.isPending}
               >
-                لم تستلم الكود؟ <span className="text-primary font-semibold">أعد الإرسال</span>
+                {sendOtpMutation.isPending ? "جاري الإرسال..." : "إعادة الإرسال"}
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ── PASSWORD (existing user) ── */}
-          {step === "password" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <button onClick={() => setStep("identifier")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowRight className="w-4 h-4" /> رجوع
-              </button>
-              <div>
-                <h1 className="text-2xl font-black mb-2">مرحباً بعودتك 🌿</h1>
-                <p className="text-sm text-muted-foreground">أدخل كلمة مرورك للدخول</p>
-              </div>
-              <form onSubmit={handlePasswordLogin} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">كلمة المرور</label>
-                  <div className="relative">
-                    <Input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} className="h-12 rounded-xl bg-muted/20 pe-10" placeholder="••••••••" autoFocus />
-                    <button type="button" onClick={() => setShowPass(v => !v)} className="absolute inset-y-0 left-3 flex items-center text-muted-foreground hover:text-foreground">
-                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full h-12 font-bold rounded-xl" disabled={!password || loginMutation.isPending}>
-                  {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "دخول"}
-                </Button>
-              </form>
+        {/* ── STEP: register ──────────────────────────────────────── */}
+        {step === "register" && (
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="rounded-xl bg-muted/40 border border-border/50 px-4 py-3 text-center">
+              <p className="text-xs text-muted-foreground">البريد الإلكتروني</p>
+              <p className="font-semibold text-sm" dir="ltr">{email}</p>
             </div>
-          )}
 
-          {/* ── RESET PASSWORD ── */}
-          {step === "reset-password" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <button onClick={() => { setStep("identifier"); setShowClassic(true); setError(""); }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowRight className="w-4 h-4" /> رجوع
-              </button>
-              <div>
-                <h1 className="text-2xl font-black mb-1">إعادة تعيين كلمة المرور 🔑</h1>
-                <p className="text-sm text-muted-foreground">أدخل بريدك وكلمة المرور الجديدة</p>
-              </div>
-              <form onSubmit={handleResetPassword} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">البريد الإلكتروني</label>
-                  <Input
-                    type="email"
-                    value={resetEmail}
-                    onChange={e => { setResetEmail(e.target.value); setError(""); }}
-                    className="h-12 rounded-xl bg-muted/20"
-                    placeholder="example@email.com"
-                    dir="ltr"
-                    autoFocus
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">كلمة المرور الجديدة</label>
-                  <div className="relative">
-                    <Input
-                      type={showResetPass ? "text" : "password"}
-                      value={resetNewPass}
-                      onChange={e => { setResetNewPass(e.target.value); setError(""); }}
-                      className="h-12 rounded-xl bg-muted/20 pe-10"
-                      placeholder="٦ أحرف على الأقل"
-                      required
-                      minLength={6}
-                    />
-                    <button type="button" onClick={() => setShowResetPass(v => !v)} className="absolute inset-y-0 left-3 flex items-center text-muted-foreground hover:text-foreground">
-                      {showResetPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">تأكيد كلمة المرور</label>
-                  <div className="relative">
-                    <Input
-                      type={showResetConfirm ? "text" : "password"}
-                      value={resetConfirmPass}
-                      onChange={e => { setResetConfirmPass(e.target.value); setError(""); }}
-                      className="h-12 rounded-xl bg-muted/20 pe-10"
-                      placeholder="أعد كتابة كلمة المرور"
-                      required
-                      minLength={6}
-                    />
-                    <button type="button" onClick={() => setShowResetConfirm(v => !v)} className="absolute inset-y-0 left-3 flex items-center text-muted-foreground hover:text-foreground">
-                      {showResetConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button
-                  type="submit"
-                  className="w-full h-12 font-bold rounded-xl"
-                  disabled={!resetEmail.trim() || resetNewPass.length < 6 || resetPasswordMutation.isPending}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">الاسم الكامل</label>
+              <Input
+                placeholder="اسمك الكامل"
+                value={displayName}
+                onChange={e => setDisplayName(e.target.value)}
+                className="h-11"
+                autoFocus
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">اسم المستخدم</label>
+              <Input
+                placeholder="@username"
+                dir="ltr"
+                value={username}
+                onChange={e => setUsername(e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase())}
+                className="h-11"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">
+                التخصص <span className="text-muted-foreground font-normal">(اختياري)</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={specialty}
+                  onChange={e => setSpecialty(e.target.value)}
+                  className="w-full h-11 rounded-md border border-border bg-background px-3 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  {resetPasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "تغيير كلمة المرور"}
-                </Button>
-              </form>
-            </div>
-          )}
-
-          {/* ── RESET DONE ── */}
-          {step === "reset-done" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
-              <div className="flex justify-center">
-                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-10 h-10 text-primary" />
-                </div>
+                  <option value="">اختر تخصصك</option>
+                  {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
-              <div>
-                <h1 className="text-2xl font-black mb-2">تم تغيير كلمة المرور ✅</h1>
-                <p className="text-sm text-muted-foreground">يمكنك الآن تسجيل الدخول بكلمة مرورك الجديدة</p>
-              </div>
-              <Button
-                className="w-full h-12 font-bold rounded-xl"
-                onClick={() => { setStep("identifier"); setShowClassic(true); setClassicEmail(resetEmail); setResetNewPass(""); setResetConfirmPass(""); setError(""); }}
-              >
-                تسجيل الدخول
-              </Button>
             </div>
-          )}
 
-          {/* ── REGISTER ── */}
-          {step === "register" && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <div>
-                <h1 className="text-2xl font-black mb-1">أنشئ حسابك 🌱</h1>
-                <p className="text-sm text-muted-foreground">أكمل بياناتك للانضمام إلى مجتمع زراعة</p>
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">كلمة المرور</label>
+              <div className="relative">
+                <Input
+                  type={showRegPass ? "text" : "password"}
+                  placeholder="٦ أحرف على الأقل"
+                  value={regPassword}
+                  onChange={e => setRegPassword(e.target.value)}
+                  className="h-11 pl-10"
+                  minLength={6}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowRegPass(v => !v)}
+                >
+                  {showRegPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">الاسم الكامل</label>
-                  <Input value={displayName} onChange={e => setDisplayName(e.target.value)} className="h-12 rounded-xl bg-muted/20" placeholder="اسمك الكامل" required autoFocus />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">اسم المستخدم</label>
-                  <div className="relative">
-                    <Input
-                      value={username}
-                      onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
-                      className="h-12 rounded-xl bg-muted/20 ps-8"
-                      placeholder="username"
-                      dir="ltr"
-                      required
-                    />
-                    <span className="absolute inset-y-0 right-3 flex items-center text-muted-foreground font-bold text-sm">@</span>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">التخصص <span className="text-muted-foreground font-normal">(اختياري)</span></label>
-                  <div className="relative">
-                    <select
-                      value={specialty}
-                      onChange={e => setSpecialty(e.target.value)}
-                      className="w-full h-12 rounded-xl border border-border/60 bg-muted/20 px-3 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-foreground"
-                    >
-                      <option value="">اختر تخصصك</option>
-                      {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  </div>
-                </div>
-                <div className="px-3 py-2 rounded-lg bg-muted/30 text-xs text-muted-foreground" dir="ltr">
-                  {isPhone ? `📱 ${identifier}` : `📧 ${identifier}`}
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">كلمة المرور</label>
-                  <div className="relative">
-                    <Input type={showRegPass ? "text" : "password"} value={regPassword} onChange={e => setRegPassword(e.target.value)} className="h-12 rounded-xl bg-muted/20 pe-10" placeholder="٦ أحرف على الأقل" required minLength={6} />
-                    <button type="button" onClick={() => setShowRegPass(v => !v)} className="absolute inset-y-0 left-3 flex items-center text-muted-foreground hover:text-foreground">
-                      {showRegPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full h-12 font-bold rounded-xl" disabled={!displayName.trim() || !username.trim() || regPassword.length < 6 || registerMutation.isPending}>
-                  {registerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "إنشاء الحساب 🌾"}
-                </Button>
-                <p className="text-xs text-muted-foreground text-center">بالتسجيل، أنت توافق على شروط الاستخدام وسياسة الخصوصية</p>
-              </form>
             </div>
-          )}
 
-        </div>
+            {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
-        <div className="text-center pb-6 text-xs text-muted-foreground/50 px-4">
-          زراعة.كوم © {new Date().getFullYear()} — المنصة الزراعية العربية
-        </div>
+            <Button
+              type="submit"
+              className="w-full h-11 text-base font-bold"
+              disabled={registerMutation.isPending}
+            >
+              {registerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "إنشاء الحساب"}
+            </Button>
+
+            <button
+              type="button"
+              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => { setStep("otp"); setError(""); }}
+            >
+              رجوع
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

@@ -42,6 +42,7 @@ import type {
   MessageResponse,
   Notification,
   NotificationSummary,
+  OtpLoginInput,
   OtpSentResult,
   OtpVerifyResult,
   Post,
@@ -499,6 +500,77 @@ export const useLogout = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getLogoutMutationOptions(options));
+    }
+
+export const getOtpLoginUrl = () => {
+
+
+
+
+  return `/api/auth/otp-login`
+}
+
+/**
+ * @summary Login with email + OTP (passwordless)
+ */
+export const otpLogin = async (otpLoginInput: OtpLoginInput, options?: RequestInit): Promise<AuthResponse> => {
+
+  return customFetch<AuthResponse>(getOtpLoginUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      otpLoginInput,)
+  }
+);}
+
+
+
+
+export const getOtpLoginMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof otpLogin>>, TError,{data: BodyType<OtpLoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof otpLogin>>, TError,{data: BodyType<OtpLoginInput>}, TContext> => {
+
+const mutationKey = ['otpLogin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof otpLogin>>, {data: BodyType<OtpLoginInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  otpLogin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OtpLoginMutationResult = NonNullable<Awaited<ReturnType<typeof otpLogin>>>
+    export type OtpLoginMutationBody = BodyType<OtpLoginInput>
+    export type OtpLoginMutationError = ErrorType<void>
+
+    /**
+ * @summary Login with email + OTP (passwordless)
+ */
+export const useOtpLogin = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof otpLogin>>, TError,{data: BodyType<OtpLoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof otpLogin>>,
+        TError,
+        {data: BodyType<OtpLoginInput>},
+        TContext
+      > => {
+      return useMutation(getOtpLoginMutationOptions(options));
     }
 
 export const getResetPasswordUrl = () => {

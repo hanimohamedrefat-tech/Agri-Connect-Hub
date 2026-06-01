@@ -85,7 +85,7 @@
   --primary: 142 68% 34%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 28 45% 42%;
+  --secondary: 322 45% 50%;
   --secondary-foreground: 0 0% 100%;
 
   --card: 138 35% 99%;
@@ -300,8 +300,8 @@
   --ring: 142 62% 42%;
   --primary: 142 62% 42%;
   --primary-foreground: 142 42% 5%;
-  --secondary: 28 35% 28%;
-  --secondary-foreground: 138 25% 91%;
+  --secondary: 322 38% 42%;
+  --secondary-foreground: 0 0% 100%;
   --card: 142 42% 7%;
   --card-foreground: 138 25% 91%;
   --card-border: 142 32% 14%;
