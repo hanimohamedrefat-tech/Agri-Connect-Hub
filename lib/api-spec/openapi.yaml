@@ -29,6 +29,8 @@ tags:
     description: Video meetings
   - name: feed
     description: Feed and discovery
+  - name: stories
+    description: 24-hour stories
 
 paths:
   /healthz:
@@ -864,6 +866,83 @@ paths:
               schema:
                 $ref: "#/components/schemas/Meeting"
 
+  # Stories
+  /stories:
+    get:
+      operationId: getStories
+      tags: [stories]
+      summary: Get active story groups from followed users
+      responses:
+        "200":
+          description: Story groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoryGroup"
+    post:
+      operationId: createStory
+      tags: [stories]
+      summary: Create a new story
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StoryInput"
+      responses:
+        "201":
+          description: Story created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Story"
+
+  /stories/{storyId}/view:
+    post:
+      operationId: viewStory
+      tags: [stories]
+      summary: Mark a story as viewed
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: storyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Viewed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /stories/{storyId}:
+    delete:
+      operationId: deleteStory
+      tags: [stories]
+      summary: Delete own story
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: storyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -1249,3 +1328,62 @@ components:
           type: string
         count:
           type: integer
+
+    # Stories
+    Story:
+      type: object
+      required: [id, userId, imageUrl, expiresAt, createdAt, viewsCount, isViewed]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        imageUrl:
+          type: string
+        caption:
+          type: ["string", "null"]
+        expiresAt:
+          type: string
+        createdAt:
+          type: string
+        viewsCount:
+          type: integer
+        isViewed:
+          type: boolean
+
+    StoryUser:
+      type: object
+      required: [id, username, displayName]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: string
+        avatar:
+          type: ["string", "null"]
+        specialty:
+          type: ["string", "null"]
+
+    StoryGroup:
+      type: object
+      required: [user, stories, hasViewed]
+      properties:
+        user:
+          $ref: "#/components/schemas/StoryUser"
+        stories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Story"
+        hasViewed:
+          type: boolean
+
+    StoryInput:
+      type: object
+      required: [imageUrl]
+      properties:
+        imageUrl:
+          type: string
+        caption:
+          type: string

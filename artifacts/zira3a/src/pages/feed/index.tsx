@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useGetFeed, useCreatePost, useGetMe } from "@workspace/api-client-react";
 import { PostCard } from "@/components/shared/PostCard";
+import { StoriesBar } from "@/components/shared/StoriesBar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Image as ImageIcon, Smile, MapPin, Hash, Loader2, X } from "lucide-react";
@@ -93,6 +94,9 @@ export default function Feed() {
       <div className="sticky top-0 z-20 bg-background/85 backdrop-blur-xl border-b border-border/50 px-4 py-3">
         <h1 className="text-[17px] font-bold">{t.home}</h1>
       </div>
+
+      {/* Stories Bar */}
+      <StoriesBar />
 
       {/* Compose Box */}
       <div className={`border-b border-border/50 transition-all duration-200 ${isFocused ? "bg-card shadow-sm" : ""}`}>

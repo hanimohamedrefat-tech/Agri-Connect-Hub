@@ -245,6 +245,39 @@ export interface TrendingData {
   posts: Post[];
 }
 
+export interface Story {
+  id: number;
+  userId: number;
+  imageUrl: string;
+  /** @nullable */
+  caption?: string | null;
+  expiresAt: string;
+  createdAt: string;
+  viewsCount: number;
+  isViewed: boolean;
+}
+
+export interface StoryUser {
+  id: number;
+  username: string;
+  displayName: string;
+  /** @nullable */
+  avatar?: string | null;
+  /** @nullable */
+  specialty?: string | null;
+}
+
+export interface StoryGroup {
+  user: StoryUser;
+  stories: Story[];
+  hasViewed: boolean;
+}
+
+export interface StoryInput {
+  imageUrl: string;
+  caption?: string;
+}
+
 export type ListUsersParams = {
 search?: string;
 specialty?: string;

@@ -11,6 +11,7 @@ import meetingsRouter from "./meetings";
 import userPostsRouter from "./userPosts";
 import uploadRouter from "./upload";
 import statsRouter from "./stats";
+import storiesRouter from "./stories";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(notificationsRouter);
 router.use(conversationsRouter);
 router.use(meetingsRouter);
 router.use(userPostsRouter);
+router.use(storiesRouter);
 
 export default router;

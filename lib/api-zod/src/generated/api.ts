@@ -1176,3 +1176,62 @@ export const EndMeetingResponse = zod.object({
 })
 
 
+/**
+ * @summary Get active story groups from followed users
+ */
+export const GetStoriesResponseItem = zod.object({
+  "user": zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "avatar": zod.string().nullish(),
+  "specialty": zod.string().nullish()
+}),
+  "stories": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "imageUrl": zod.string(),
+  "caption": zod.string().nullish(),
+  "expiresAt": zod.string(),
+  "createdAt": zod.string(),
+  "viewsCount": zod.number(),
+  "isViewed": zod.boolean()
+})),
+  "hasViewed": zod.boolean()
+})
+export const GetStoriesResponse = zod.array(GetStoriesResponseItem)
+
+
+/**
+ * @summary Create a new story
+ */
+export const CreateStoryBody = zod.object({
+  "imageUrl": zod.string(),
+  "caption": zod.string().optional()
+})
+
+
+/**
+ * @summary Mark a story as viewed
+ */
+export const ViewStoryParams = zod.object({
+  "storyId": zod.coerce.number()
+})
+
+export const ViewStoryResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Delete own story
+ */
+export const DeleteStoryParams = zod.object({
+  "storyId": zod.coerce.number()
+})
+
+export const DeleteStoryResponse = zod.object({
+  "message": zod.string()
+})
+
+
