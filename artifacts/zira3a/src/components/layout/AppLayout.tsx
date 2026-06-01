@@ -113,8 +113,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <Leaf className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-primary leading-none">{lang === "ar" ? "زراعة" : "Zira3a"}</h1>
-              <p className="text-[10px] text-muted-foreground leading-none mt-0.5">{lang === "ar" ? "شبكة المزارعين" : "Farmers Network"}</p>
+              <h1 className="text-lg font-bold text-primary leading-none">{lang === "ar" ? "زراعة.كوم" : "Zira3a.com"}</h1>
+              <p className="text-[10px] text-muted-foreground leading-none mt-0.5">{lang === "ar" ? "عالم الزراعة" : "World of Agriculture"}</p>
             </div>
           </div>
         </div>

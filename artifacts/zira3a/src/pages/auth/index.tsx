@@ -70,11 +70,17 @@ export default function AuthPage() {
         
         {/* Branding Side */}
         <div className="flex flex-col space-y-6 px-4 py-12 md:py-0">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg">
-            <Leaf className="w-8 h-8" />
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg">
+              <Leaf className="w-7 h-7" />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-primary leading-none">زراعة.كوم</div>
+              <div className="text-sm text-muted-foreground leading-none mt-1">عالم الزراعة</div>
+            </div>
           </div>
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-foreground">
-            تواصل.<br />ازرع.<br /><span className="text-primary">احصد.</span>
+            تواصل.<br />اكتب.<br /><span className="text-primary">احصد.</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-md leading-relaxed">
             المنصة الاجتماعية المهنية الأولى للمزارعين، والمهندسين الزراعيين، وخبراء القطاع في العالم العربي.
