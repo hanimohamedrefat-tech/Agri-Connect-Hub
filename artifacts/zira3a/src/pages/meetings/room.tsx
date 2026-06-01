@@ -3,12 +3,13 @@ import { useParams, Link } from "wouter";
 import { useGetMeeting, getGetMeetingQueryKey, useGetMe } from "@workspace/api-client-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Video, VideoOff, MonitorUp, Hand, PhoneOff, MessageSquare, Users, X, Send, WifiOff } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, Hand, PhoneOff, MessageSquare, Users, X, Send, WifiOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getSocket, connectSocket } from "@/lib/socket";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatMessage {
   userId: number;
@@ -22,7 +23,6 @@ interface Participant {
   displayName: string;
 }
 
-// Renders a MediaStream into a <video> element
 function VideoTile({
   stream,
   muted,
@@ -31,6 +31,7 @@ function VideoTile({
   isMuted: audioMuted,
   isSpeaking,
   isHost,
+  isScreenShare,
 }: {
   stream: MediaStream | null;
   muted?: boolean;
@@ -39,6 +40,7 @@ function VideoTile({
   isMuted?: boolean;
   isSpeaking?: boolean;
   isHost?: boolean;
+  isScreenShare?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -51,14 +53,14 @@ function VideoTile({
   const hasVideo = stream && stream.getVideoTracks().some(t => t.enabled) && !isVideoOff;
 
   return (
-    <div className={`relative rounded-xl overflow-hidden bg-black/60 border-2 ${isSpeaking ? "border-primary" : "border-transparent"} transition-colors min-h-[180px]`}>
+    <div className={`relative rounded-xl overflow-hidden bg-black/60 border-2 ${isSpeaking ? "border-primary" : isScreenShare ? "border-blue-400" : "border-transparent"} transition-colors min-h-[180px]`}>
       {hasVideo ? (
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted={muted}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain bg-black"
         />
       ) : (
         <div className="absolute inset-0 bg-[#2c302c] flex items-center justify-center">
@@ -67,7 +69,6 @@ function VideoTile({
           </Avatar>
         </div>
       )}
-      {/* hidden audio element for remote stream when video is off */}
       {!hasVideo && stream && (
         <audio ref={(el) => { if (el) el.srcObject = stream; }} autoPlay />
       )}
@@ -77,6 +78,9 @@ function VideoTile({
             ? <MicOff className="w-3.5 h-3.5 text-red-400 shrink-0" />
             : <Mic className="w-3.5 h-3.5 text-green-400 shrink-0" />}
           <span className="text-sm font-medium truncate text-white">{name}</span>
+          {isScreenShare && (
+            <span className="text-[10px] bg-blue-500/80 text-white px-1.5 py-0.5 rounded font-bold shrink-0">شاشة</span>
+          )}
         </div>
         {isHost && (
           <span className="bg-primary/80 text-white text-[10px] font-bold px-2 py-1 rounded">مستضيف</span>
@@ -89,6 +93,7 @@ function VideoTile({
 export default function MeetingRoom() {
   const params = useParams();
   const meetingId = Number(params.meetingId);
+  const { toast } = useToast();
   const { data: meeting } = useGetMeeting(meetingId, {
     query: { enabled: !!meetingId, queryKey: getGetMeetingQueryKey(meetingId) },
   });
@@ -96,7 +101,6 @@ export default function MeetingRoom() {
 
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [sidebarPanel, setSidebarPanel] = useState<"chat" | "participants" | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -104,22 +108,38 @@ export default function MeetingRoom() {
   const [liveParticipants, setLiveParticipants] = useState<Participant[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // WebRTC: real streams
-  const { localStream, remoteStreams, hasMediaPermission } = useWebRTC({
-    meetingId,
-    myUserId: me?.id,
-    isMuted,
-    isVideoOff,
-  });
+  const {
+    localStream,
+    remoteStreams,
+    hasMediaPermission,
+    isScreenSharing,
+    startScreenShare,
+    stopScreenShare,
+    canScreenShare,
+  } = useWebRTC({ meetingId, myUserId: me?.id, isMuted, isVideoOff });
 
-  // Join meeting room over socket
+  const handleScreenShare = async () => {
+    if (isScreenSharing) {
+      stopScreenShare();
+      toast({ title: "انتهت مشاركة الشاشة" });
+    } else {
+      if (!canScreenShare) {
+        toast({ title: "غير مدعوم", description: "متصفحك لا يدعم مشاركة الشاشة.", variant: "destructive" });
+        return;
+      }
+      await startScreenShare();
+      if (isScreenSharing) {
+        toast({ title: "مشاركة الشاشة نشطة", description: "الجميع يرى شاشتك الآن." });
+      }
+    }
+  };
+
   useEffect(() => {
     if (!me) return;
     connectSocket();
     const socket = getSocket();
 
     socket.emit("join:meeting", { meetingId, displayName: me.displayName });
-
     setLiveParticipants([{ userId: me.id, displayName: me.displayName }]);
 
     socket.on("meeting:chat_message", (msg: ChatMessage) => {
@@ -171,6 +191,12 @@ export default function MeetingRoom() {
               تسجيل
             </div>
           )}
+          {isScreenSharing && (
+            <div className="flex items-center gap-1.5 text-xs font-medium text-blue-400 bg-blue-400/10 px-2 py-1 rounded animate-pulse">
+              <MonitorUp className="w-3.5 h-3.5" />
+              أنت تشارك شاشتك
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {!hasMediaPermission && (
@@ -189,17 +215,22 @@ export default function MeetingRoom() {
 
         {/* Video grid */}
         <div className="flex-1 p-4 overflow-y-auto">
-          <div className={`grid gap-4 h-full ${totalCount <= 1 ? "" : totalCount <= 2 ? "grid-cols-2" : totalCount <= 4 ? "grid-cols-2" : "grid-cols-3"}`}>
+          <div className={`grid gap-4 h-full ${
+            totalCount <= 1 ? "grid-cols-1" :
+            totalCount <= 2 ? "grid-cols-2" :
+            totalCount <= 4 ? "grid-cols-2" : "grid-cols-3"
+          }`}>
 
             {/* Local tile */}
             <VideoTile
               stream={localStream}
               muted
               name={me ? `${me.displayName} (أنت)` : "أنت"}
-              isVideoOff={isVideoOff}
+              isVideoOff={isVideoOff && !isScreenSharing}
               isMuted={isMuted}
               isSpeaking={!isMuted}
               isHost={me?.id === meeting?.hostId}
+              isScreenShare={isScreenSharing}
             />
 
             {/* Remote tiles */}
@@ -284,7 +315,6 @@ export default function MeetingRoom() {
               <div className="flex-1 overflow-y-auto p-2">
                 <div className="text-xs font-medium text-white/50 px-2 py-2 mb-1">في الاجتماع ({totalCount})</div>
 
-                {/* Self */}
                 {me && (
                   <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5">
                     <Avatar className="w-8 h-8 shrink-0">
@@ -295,13 +325,13 @@ export default function MeetingRoom() {
                       {me.id === meeting?.hostId && <div className="text-[10px] text-primary">المستضيف</div>}
                     </div>
                     <div className="flex gap-2 text-white/40 shrink-0">
+                      {isScreenSharing && <MonitorUp className="w-4 h-4 text-blue-400" />}
                       {isVideoOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4 text-white" />}
                       {isMuted ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4 text-white" />}
                     </div>
                   </div>
                 )}
 
-                {/* Remote participants */}
                 {liveParticipants.filter(p => p.userId !== me?.id).map(p => (
                   <div key={p.userId} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5">
                     <Avatar className="w-8 h-8 shrink-0">
@@ -325,60 +355,82 @@ export default function MeetingRoom() {
       </div>
 
       {/* Bottom controls */}
-      <div className="h-20 bg-black/60 border-t border-white/10 flex items-center justify-center gap-2 md:gap-4 px-4 shrink-0">
+      <div className="h-20 bg-black/60 border-t border-white/10 flex items-center justify-center gap-2 md:gap-3 px-4 shrink-0">
 
+        {/* Mic */}
         <Button
           variant={isMuted ? "destructive" : "secondary"}
           size="icon"
+          title={isMuted ? "تفعيل المايك" : "كتم المايك"}
           className={`w-12 h-12 rounded-full ${!isMuted ? "bg-[#2c302c] hover:bg-[#3c403c] text-white" : ""}`}
           onClick={() => setIsMuted(v => !v)}
         >
           {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
         </Button>
 
+        {/* Camera */}
         <Button
           variant={isVideoOff ? "destructive" : "secondary"}
           size="icon"
+          title={isVideoOff ? "تفعيل الكاميرا" : "إيقاف الكاميرا"}
           className={`w-12 h-12 rounded-full ${!isVideoOff ? "bg-[#2c302c] hover:bg-[#3c403c] text-white" : ""}`}
           onClick={() => setIsVideoOff(v => !v)}
+          disabled={isScreenSharing}
         >
           {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
         </Button>
 
-        <div className="w-px h-8 bg-white/10 mx-2 hidden md:block" />
+        <div className="w-px h-8 bg-white/10 mx-1 hidden md:block" />
 
+        {/* Screen share */}
         <Button
           variant={isScreenSharing ? "default" : "secondary"}
           size="icon"
-          className={`w-12 h-12 rounded-full hidden sm:flex ${!isScreenSharing ? "bg-[#2c302c] hover:bg-[#3c403c] text-white" : ""}`}
-          onClick={() => setIsScreenSharing(v => !v)}
+          title={isScreenSharing ? "إيقاف مشاركة الشاشة" : "مشاركة الشاشة"}
+          className={`w-12 h-12 rounded-full hidden sm:flex ${
+            isScreenSharing
+              ? "bg-blue-500 hover:bg-blue-600 text-white ring-2 ring-blue-400"
+              : "bg-[#2c302c] hover:bg-[#3c403c] text-white"
+          } ${!canScreenShare ? "opacity-40 cursor-not-allowed" : ""}`}
+          onClick={handleScreenShare}
+          disabled={!canScreenShare}
         >
-          <MonitorUp className="w-5 h-5" />
+          {isScreenSharing ? <MonitorOff className="w-5 h-5" /> : <MonitorUp className="w-5 h-5" />}
         </Button>
 
+        {/* Raise hand */}
         <Button
           variant={isHandRaised ? "default" : "secondary"}
           size="icon"
-          className={`w-12 h-12 rounded-full ${!isHandRaised ? "bg-[#2c302c] hover:bg-[#3c403c] text-white" : "bg-orange-500 hover:bg-orange-600 text-white"}`}
+          title={isHandRaised ? "إنزال اليد" : "رفع اليد"}
+          className={`w-12 h-12 rounded-full ${
+            isHandRaised
+              ? "bg-orange-500 hover:bg-orange-600 text-white"
+              : "bg-[#2c302c] hover:bg-[#3c403c] text-white"
+          }`}
           onClick={() => setIsHandRaised(v => !v)}
         >
           <Hand className="w-5 h-5" />
         </Button>
 
-        <div className="w-px h-8 bg-white/10 mx-2 hidden md:block" />
+        <div className="w-px h-8 bg-white/10 mx-1 hidden md:block" />
 
+        {/* Participants */}
         <Button
           variant="secondary"
           size="icon"
+          title="المشاركون"
           className={`w-12 h-12 rounded-full bg-[#2c302c] hover:bg-[#3c403c] text-white ${sidebarPanel === "participants" ? "ring-2 ring-primary" : ""}`}
           onClick={() => setSidebarPanel(sidebarPanel === "participants" ? null : "participants")}
         >
           <Users className="w-5 h-5" />
         </Button>
 
+        {/* Chat */}
         <Button
           variant="secondary"
           size="icon"
+          title="الدردشة"
           className={`w-12 h-12 rounded-full bg-[#2c302c] hover:bg-[#3c403c] text-white relative ${sidebarPanel === "chat" ? "ring-2 ring-primary" : ""}`}
           onClick={() => setSidebarPanel(sidebarPanel === "chat" ? null : "chat")}
         >
@@ -392,6 +444,7 @@ export default function MeetingRoom() {
 
         <div className="flex-1" />
 
+        {/* Leave */}
         <Button asChild variant="destructive" className="rounded-full px-6 h-12 font-bold gap-2">
           <Link href={`/meetings/${meetingId}`}>
             <PhoneOff className="w-5 h-5" />
