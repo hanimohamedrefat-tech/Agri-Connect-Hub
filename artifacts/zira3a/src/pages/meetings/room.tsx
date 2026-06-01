@@ -185,12 +185,18 @@ export default function MeetingRoom() {
       setRaisedHands(prev => { const n = new Set(prev); n.delete(data.userId); return n; });
     });
 
+    socket.on("meeting:all_hands_lowered", () => {
+      setRaisedHands(new Set());
+      setIsHandRaised(false);
+    });
+
     return () => {
       socket.off("meeting:chat_message");
       socket.off("meeting:participant_joined");
       socket.off("meeting:participant_left");
       socket.off("meeting:hand_raised");
       socket.off("meeting:hand_lowered");
+      socket.off("meeting:all_hands_lowered");
       socket.emit("leave:meeting", { meetingId });
     };
   }, [meetingId, me?.id]);
@@ -432,6 +438,22 @@ export default function MeetingRoom() {
         >
           {isScreenSharing ? <MonitorOff className="w-5 h-5" /> : <MonitorUp className="w-5 h-5" />}
         </Button>
+
+        {/* Lower all hands — host only, shown when hands are raised */}
+        {me?.id === meeting?.hostId && raisedHands.size > 0 && (
+          <Button
+            variant="secondary"
+            size="sm"
+            title="إنزال كل الأيدي"
+            className="h-12 px-3 rounded-full bg-orange-500/20 hover:bg-orange-500/40 text-orange-300 border border-orange-500/40 text-xs font-bold gap-1.5 hidden sm:flex"
+            onClick={() => {
+              getSocket().emit("meeting:lower_all_hands", { meetingId });
+            }}
+          >
+            <Hand className="w-4 h-4" />
+            <span>إنزال الكل ({raisedHands.size})</span>
+          </Button>
+        )}
 
         {/* Raise hand */}
         <Button

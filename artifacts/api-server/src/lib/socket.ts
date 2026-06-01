@@ -87,6 +87,10 @@ export function createSocketServer(httpServer: HTTPServer) {
       socket.to(`meeting:${meetingId}`).emit("meeting:hand_lowered", { userId });
     });
 
+    socket.on("meeting:lower_all_hands", ({ meetingId }: { meetingId: number }) => {
+      io.to(`meeting:${meetingId}`).emit("meeting:all_hands_lowered");
+    });
+
     // ── WebRTC signaling relay ──────────────────────────────────────────────
 
     socket.on("webrtc:offer", ({ targetUserId, meetingId, offer }: {
