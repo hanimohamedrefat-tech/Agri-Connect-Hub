@@ -288,6 +288,12 @@ export default function AuthPage() {
               </div>
 
               <div className="space-y-5">
+                {demoCode && (
+                  <div className="rounded-xl border-2 border-dashed border-amber-400/60 bg-amber-50/10 px-4 py-3 text-center space-y-1">
+                    <p className="text-xs text-amber-600 font-semibold">وضع التطوير — كود التحقق:</p>
+                    <p className="text-2xl font-black tracking-[0.3em] text-amber-500" dir="ltr">{demoCode}</p>
+                  </div>
+                )}
                 <OtpInput value={otp} onChange={v => { setOtp(v); setOtpError(""); }} />
                 {otpError && <p className="text-sm text-destructive text-center">{otpError}</p>}
                 <Button

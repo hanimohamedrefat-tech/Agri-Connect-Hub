@@ -41,20 +41,32 @@ router.post("/auth/send-otp", async (req, res): Promise<void> => {
   }
 
   // Send OTP via email if the identifier is an email address
+  const hasEmailCredentials = !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+  let devOtp: string | undefined;
+
   if (isEmail) {
-    try {
-      await sendOtpEmail(key, otp);
-      logger.info({ key }, "OTP email sent");
-    } catch (err) {
-      logger.error({ err, key }, "Failed to send OTP email");
-      res.status(500).json({ error: "فشل إرسال الكود، تحقق من البريد الإلكتروني وحاول مجدداً" });
-      return;
+    if (hasEmailCredentials) {
+      try {
+        await sendOtpEmail(key, otp);
+        logger.info({ key }, "OTP email sent");
+      } catch (err) {
+        logger.error({ err, key }, "Failed to send OTP email");
+        res.status(500).json({ error: "فشل إرسال الكود، تحقق من البريد الإلكتروني وحاول مجدداً" });
+        return;
+      }
+    } else {
+      // Dev mode: no email credentials configured — surface OTP in response
+      logger.warn({ key }, "No email credentials configured — returning OTP in response (dev mode)");
+      devOtp = otp;
     }
   }
 
   res.json({
-    message: isEmail ? "تم إرسال الكود على بريدك الإلكتروني" : "تم إرسال الكود",
+    message: isEmail
+      ? (hasEmailCredentials ? "تم إرسال الكود على بريدك الإلكتروني" : "وضع التطوير: استخدم الكود الظاهر أدناه")
+      : "تم إرسال الكود",
     userExists,
+    ...(devOtp !== undefined && { demoCode: devOtp }),
   });
 });
 
