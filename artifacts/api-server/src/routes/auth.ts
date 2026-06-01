@@ -4,6 +4,7 @@ import { db, usersTable } from "@workspace/db";
 import { eq, or } from "drizzle-orm";
 import { authMiddleware, signToken, type AuthRequest } from "../middlewares/auth";
 import { logger } from "../lib/logger";
+import { sendOtpEmail } from "../lib/mailer";
 
 const router: IRouter = Router();
 
@@ -39,11 +40,21 @@ router.post("/auth/send-otp", async (req, res): Promise<void> => {
     userExists = !!u;
   }
 
-  // In production, send real email/SMS. For demo, return the code.
+  // Send OTP via email if the identifier is an email address
+  if (isEmail) {
+    try {
+      await sendOtpEmail(key, otp);
+      logger.info({ key }, "OTP email sent");
+    } catch (err) {
+      logger.error({ err, key }, "Failed to send OTP email");
+      res.status(500).json({ error: "فشل إرسال الكود، تحقق من البريد الإلكتروني وحاول مجدداً" });
+      return;
+    }
+  }
+
   res.json({
-    message: "تم إرسال الكود",
+    message: isEmail ? "تم إرسال الكود على بريدك الإلكتروني" : "تم إرسال الكود",
     userExists,
-    demoCode: otp, // Remove in production when real email/SMS is configured
   });
 });
 
