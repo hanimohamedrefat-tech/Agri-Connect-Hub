@@ -2,3 +2,5 @@
 - [Database schema push required](db-schema-push.md) — run `pnpm --filter @workspace/db run push` on fresh import; tables don't auto-create, causing 500 "Failed query" errors
 - [Production deployment config](deployment-config.md) — VM type (Socket.io needs persistent connections); build: frontend then API; run: PORT=5000 node artifacts/api-server/dist/index.mjs
 - [Follow mutation uses username](follow-mutation.md) — useFollowUser mutate expects { username: string }, NOT { userId: number }; joinMeetingByCode expects { joinCode: string } not { data: { joinCode } }
+- [Email OTP via Nodemailer](email-otp.md) — Uses Gmail SMTP with GMAIL_USER + GMAIL_APP_PASSWORD secrets; mailer at artifacts/api-server/src/lib/mailer.ts; demoCode removed from response
+- [Object Storage setup](object-storage.md) — Replit GCS sidecar at 127.0.0.1:1106; bucket env vars set by setup_object_storage; storage.ts route already existed; seed users via /api/auth/register not a seed script
