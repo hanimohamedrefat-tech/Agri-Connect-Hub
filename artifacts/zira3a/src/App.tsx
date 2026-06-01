@@ -24,6 +24,7 @@ import MeetingRoom from "@/pages/meetings/room";
 import Settings from "@/pages/settings";
 import Stats from "@/pages/stats";
 import VerifyPage from "@/pages/verify";
+import AdminPage from "@/pages/admin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ function Router() {
             <Route path="/settings" component={Settings} />
             <Route path="/stats" component={Stats} />
             <Route path="/verify" component={VerifyPage} />
+            <Route path="/admin" component={AdminPage} />
             <Route component={NotFound} />
           </Switch>
         </AppLayout>

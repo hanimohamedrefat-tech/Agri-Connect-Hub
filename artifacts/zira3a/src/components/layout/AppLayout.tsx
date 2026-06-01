@@ -20,6 +20,7 @@ import {
   UserPlus,
   BarChart3,
   BadgeCheck,
+  ShieldCheck,
 } from "lucide-react";
 import { ZiraBrand, ZiraLogo } from "@/components/ZiraLogo";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { icon: BarChart3, label: t.stats, href: "/stats" },
     { icon: BadgeCheck, label: lang === "ar" ? "التوثيق" : "Verify", href: "/verify", highlight: !user?.isVerified },
     { icon: Settings, label: t.settings, href: "/settings" },
+    { icon: ShieldCheck, label: lang === "ar" ? "الإدارة" : "Admin", href: "/admin" },
   ];
 
   const themes = [

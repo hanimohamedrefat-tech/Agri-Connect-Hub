@@ -14,6 +14,7 @@ import statsRouter from "./stats";
 import storiesRouter from "./stories";
 import storageRouter from "./storage";
 import adsRouter from "./ads";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(meetingsRouter);
 router.use(userPostsRouter);
 router.use(storiesRouter);
 router.use(adsRouter);
+router.use(adminRouter);
 
 export default router;
