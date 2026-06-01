@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { useLogin, useRegister, useGetMe, useSendOtp, useVerifyOtp } from "@workspace/api-client-react";
+import { useLogin, useRegister, useGetMe, useSendOtp, useVerifyOtp, useResetPassword } from "@workspace/api-client-react";
 import { setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowRight, ArrowLeft, Eye, EyeOff, ChevronDown } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft, Eye, EyeOff, ChevronDown, CheckCircle2 } from "lucide-react";
 import { ZiraBrand } from "@/components/ZiraLogo";
 
 // ── OTP Input (6 boxes) ───────────────────────────────────────────────────
@@ -59,7 +59,7 @@ const SPECIALTIES = [
   "طالب زراعة", "صاحب مشروع زراعي", "أخرى",
 ];
 
-type Step = "identifier" | "otp" | "password" | "register";
+type Step = "identifier" | "otp" | "password" | "register" | "reset-password" | "reset-done";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -68,6 +68,7 @@ export default function AuthPage() {
   const registerMutation = useRegister();
   const sendOtpMutation = useSendOtp();
   const verifyOtpMutation = useVerifyOtp();
+  const resetPasswordMutation = useResetPassword();
 
   const [step, setStep] = useState<Step>("identifier");
   const [identifier, setIdentifier] = useState("");
@@ -92,6 +93,13 @@ export default function AuthPage() {
   const [classicPass, setClassicPass] = useState("");
   const [showClassicPass, setShowClassicPass] = useState(false);
 
+  // Reset password
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetNewPass, setResetNewPass] = useState("");
+  const [resetConfirmPass, setResetConfirmPass] = useState("");
+  const [showResetPass, setShowResetPass] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
   useEffect(() => {
     if (!checkingAuth && user) setLocation("/feed");
   }, [user, checkingAuth, setLocation]);
@@ -109,7 +117,8 @@ export default function AuthPage() {
         onError: () => setOtpError("الكود غير صحيح أو منتهي الصلاحية"),
       },
     );
-  }, [identifier, userExists, verifyOtpMutation]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [identifier, userExists]);
 
   // Auto-submit OTP on 6 digits
   useEffect(() => {
@@ -178,6 +187,29 @@ export default function AuthPage() {
       {
         onSuccess: (res) => { setToken(res.token); window.location.href = "/feed"; },
         onError: () => setError("البريد أو كلمة المرور غير صحيحة"),
+      },
+    );
+  };
+
+  const handleResetPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (resetNewPass !== resetConfirmPass) {
+      setError("كلمتا المرور غير متطابقتين");
+      return;
+    }
+    if (resetNewPass.length < 6) {
+      setError("كلمة المرور يجب أن تكون ٦ أحرف على الأقل");
+      return;
+    }
+    resetPasswordMutation.mutate(
+      { data: { email: resetEmail.trim(), newPassword: resetNewPass } },
+      {
+        onSuccess: () => { setStep("reset-done"); },
+        onError: (err: unknown) => {
+          const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+          setError(msg ?? "حدث خطأ، تحقق من البريد وحاول مجدداً");
+        },
       },
     );
   };
@@ -270,6 +302,13 @@ export default function AuthPage() {
                 <Button type="submit" className="w-full h-12 font-bold rounded-xl" disabled={loginMutation.isPending}>
                   {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "دخول"}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => { setResetEmail(classicEmail); setStep("reset-password"); setError(""); }}
+                  className="w-full text-sm text-center text-muted-foreground hover:text-primary transition-colors"
+                >
+                  نسيت كلمة المرور؟
+                </button>
               </form>
             </div>
           )}
@@ -340,6 +379,97 @@ export default function AuthPage() {
                   {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "دخول"}
                 </Button>
               </form>
+            </div>
+          )}
+
+          {/* ── RESET PASSWORD ── */}
+          {step === "reset-password" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <button onClick={() => { setStep("identifier"); setShowClassic(true); setError(""); }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowRight className="w-4 h-4" /> رجوع
+              </button>
+              <div>
+                <h1 className="text-2xl font-black mb-1">إعادة تعيين كلمة المرور 🔑</h1>
+                <p className="text-sm text-muted-foreground">أدخل بريدك وكلمة المرور الجديدة</p>
+              </div>
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold">البريد الإلكتروني</label>
+                  <Input
+                    type="email"
+                    value={resetEmail}
+                    onChange={e => { setResetEmail(e.target.value); setError(""); }}
+                    className="h-12 rounded-xl bg-muted/20"
+                    placeholder="example@email.com"
+                    dir="ltr"
+                    autoFocus
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold">كلمة المرور الجديدة</label>
+                  <div className="relative">
+                    <Input
+                      type={showResetPass ? "text" : "password"}
+                      value={resetNewPass}
+                      onChange={e => { setResetNewPass(e.target.value); setError(""); }}
+                      className="h-12 rounded-xl bg-muted/20 pe-10"
+                      placeholder="٦ أحرف على الأقل"
+                      required
+                      minLength={6}
+                    />
+                    <button type="button" onClick={() => setShowResetPass(v => !v)} className="absolute inset-y-0 left-3 flex items-center text-muted-foreground hover:text-foreground">
+                      {showResetPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold">تأكيد كلمة المرور</label>
+                  <div className="relative">
+                    <Input
+                      type={showResetConfirm ? "text" : "password"}
+                      value={resetConfirmPass}
+                      onChange={e => { setResetConfirmPass(e.target.value); setError(""); }}
+                      className="h-12 rounded-xl bg-muted/20 pe-10"
+                      placeholder="أعد كتابة كلمة المرور"
+                      required
+                      minLength={6}
+                    />
+                    <button type="button" onClick={() => setShowResetConfirm(v => !v)} className="absolute inset-y-0 left-3 flex items-center text-muted-foreground hover:text-foreground">
+                      {showResetConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <Button
+                  type="submit"
+                  className="w-full h-12 font-bold rounded-xl"
+                  disabled={!resetEmail.trim() || resetNewPass.length < 6 || resetPasswordMutation.isPending}
+                >
+                  {resetPasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "تغيير كلمة المرور"}
+                </Button>
+              </form>
+            </div>
+          )}
+
+          {/* ── RESET DONE ── */}
+          {step === "reset-done" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
+              <div className="flex justify-center">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-10 h-10 text-primary" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-2xl font-black mb-2">تم تغيير كلمة المرور ✅</h1>
+                <p className="text-sm text-muted-foreground">يمكنك الآن تسجيل الدخول بكلمة مرورك الجديدة</p>
+              </div>
+              <Button
+                className="w-full h-12 font-bold rounded-xl"
+                onClick={() => { setStep("identifier"); setShowClassic(true); setClassicEmail(resetEmail); setResetNewPass(""); setResetConfirmPass(""); setError(""); }}
+              >
+                تسجيل الدخول
+              </Button>
             </div>
           )}
 

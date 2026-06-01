@@ -164,6 +164,29 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   res.json({ user: sanitizeUser(user), token });
 });
 
+// POST /auth/reset-password
+router.post("/auth/reset-password", async (req, res): Promise<void> => {
+  const { email, newPassword } = req.body as { email: string; newPassword: string };
+  if (!email || !newPassword) {
+    res.status(400).json({ error: "البريد وكلمة المرور الجديدة مطلوبان" });
+    return;
+  }
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: "كلمة المرور يجب أن تكون ٦ أحرف على الأقل" });
+    return;
+  }
+  const key = email.trim().toLowerCase();
+  const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, key));
+  if (!user) {
+    res.status(404).json({ error: "لا يوجد حساب مرتبط بهذا البريد" });
+    return;
+  }
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await db.update(usersTable).set({ passwordHash }).where(eq(usersTable.id, user.id));
+  logger.info({ userId: user.id }, "Password reset");
+  res.json({ message: "تم تغيير كلمة المرور بنجاح" });
+});
+
 // POST /auth/logout
 router.post("/auth/logout", (_req, res): void => {
   res.json({ message: "تم تسجيل الخروج" });

@@ -103,6 +103,23 @@ export const LogoutResponse = zod.object({
 
 
 /**
+ * @summary Reset password without OTP
+ */
+export const resetPasswordBodyNewPasswordMin = 6;
+
+
+
+export const ResetPasswordBody = zod.object({
+  "email": zod.string(),
+  "newPassword": zod.string().min(resetPasswordBodyNewPasswordMin)
+})
+
+export const ResetPasswordResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary Get current user
  */
 export const GetMeResponse = zod.object({

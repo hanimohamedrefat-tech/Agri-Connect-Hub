@@ -38,6 +38,7 @@ export * from './postInput';
 export * from './postOriginalPost';
 export * from './profileUpdate';
 export * from './registerInput';
+export * from './resetPasswordInput';
 export * from './sendOtpInput';
 export * from './story';
 export * from './storyGroup';

@@ -300,6 +300,12 @@ export interface StoryInput {
   caption?: string;
 }
 
+export interface ResetPasswordInput {
+  email: string;
+  /** @minLength 6 */
+  newPassword: string;
+}
+
 export interface UploadUrlRequest {
   name: string;
   size: number;
