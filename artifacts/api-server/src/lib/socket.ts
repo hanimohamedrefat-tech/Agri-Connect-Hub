@@ -9,6 +9,14 @@ interface AuthSocket extends Socket {
   data: { userId: number; displayName?: string };
 }
 
+interface WaitingEntry {
+  userId: number;
+  displayName: string;
+}
+
+// In-memory waiting rooms: meetingId → list of waiting participants
+const waitingRooms = new Map<number, WaitingEntry[]>();
+
 export function createSocketServer(httpServer: HTTPServer) {
   io = new Server(httpServer, {
     path: "/api/socket.io",
@@ -44,6 +52,61 @@ export function createSocketServer(httpServer: HTTPServer) {
       socket.leave(`conversation:${conversationId}`);
     });
 
+    // ── Waiting Room ────────────────────────────────────────────────────────
+
+    // Non-host requests to join; notifies the host
+    socket.on("meeting:request_join", ({
+      meetingId, hostId, displayName,
+    }: { meetingId: number; hostId: number; displayName: string }) => {
+      const name = displayName || socket.data.displayName || "مشارك";
+      socket.data.displayName = name;
+
+      // Store in waiting room
+      if (!waitingRooms.has(meetingId)) waitingRooms.set(meetingId, []);
+      const list = waitingRooms.get(meetingId)!;
+      if (!list.find(e => e.userId === userId)) {
+        list.push({ userId, displayName: name });
+      }
+
+      logger.info({ userId, meetingId }, "Participant waiting for admission");
+
+      // Notify host
+      io.to(`user:${hostId}`).emit("meeting:waiting_request", {
+        userId,
+        displayName: name,
+        meetingId,
+      });
+    });
+
+    // Host admits a waiting participant
+    socket.on("meeting:admit", ({
+      meetingId, targetUserId,
+    }: { meetingId: number; targetUserId: number }) => {
+      // Remove from waiting list
+      const list = waitingRooms.get(meetingId);
+      if (list) {
+        const idx = list.findIndex(e => e.userId === targetUserId);
+        if (idx !== -1) list.splice(idx, 1);
+      }
+      logger.info({ hostId: userId, targetUserId, meetingId }, "Participant admitted");
+      io.to(`user:${targetUserId}`).emit("meeting:admitted", { meetingId });
+    });
+
+    // Host rejects a waiting participant
+    socket.on("meeting:reject", ({
+      meetingId, targetUserId,
+    }: { meetingId: number; targetUserId: number }) => {
+      const list = waitingRooms.get(meetingId);
+      if (list) {
+        const idx = list.findIndex(e => e.userId === targetUserId);
+        if (idx !== -1) list.splice(idx, 1);
+      }
+      logger.info({ hostId: userId, targetUserId, meetingId }, "Participant rejected");
+      io.to(`user:${targetUserId}`).emit("meeting:rejected", { meetingId });
+    });
+
+    // ── Join meeting (post-admission) ───────────────────────────────────────
+
     socket.on("join:meeting", ({ meetingId, displayName }: { meetingId: number; displayName?: string }) => {
       const roomName = `meeting:${meetingId}`;
       if (displayName) socket.data.displayName = displayName;
@@ -53,7 +116,7 @@ export function createSocketServer(httpServer: HTTPServer) {
 
       socket.join(roomName);
 
-      // Broadcast presence update to all (excluding sender)
+      // Broadcast presence update (excluding sender)
       socket.to(roomName).emit("meeting:participant_joined", {
         userId,
         displayName: socket.data.displayName ?? "مشارك",
@@ -74,21 +137,6 @@ export function createSocketServer(httpServer: HTTPServer) {
         content,
         timestamp: new Date().toISOString(),
       });
-    });
-
-    socket.on("meeting:raise_hand", ({ meetingId }: { meetingId: number }) => {
-      socket.to(`meeting:${meetingId}`).emit("meeting:hand_raised", {
-        userId,
-        displayName: socket.data.displayName ?? "مشارك",
-      });
-    });
-
-    socket.on("meeting:lower_hand", ({ meetingId }: { meetingId: number }) => {
-      socket.to(`meeting:${meetingId}`).emit("meeting:hand_lowered", { userId });
-    });
-
-    socket.on("meeting:lower_all_hands", ({ meetingId }: { meetingId: number }) => {
-      io.to(`meeting:${meetingId}`).emit("meeting:all_hands_lowered");
     });
 
     // ── WebRTC signaling relay ──────────────────────────────────────────────
