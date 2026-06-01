@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { useRegister, useGetMe, useSendOtp, useOtpLogin } from "@workspace/api-client-react";
+import { useRegister, useGetMe, useSendOtp, useOtpLogin, useVerifyOtp } from "@workspace/api-client-react";
 import { setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +67,7 @@ export default function AuthPage() {
   const registerMutation = useRegister();
   const sendOtpMutation = useSendOtp();
   const otpLoginMutation = useOtpLogin();
+  const verifyOtpMutation = useVerifyOtp();
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -102,9 +103,17 @@ export default function AuthPage() {
         },
       );
     } else {
-      // New user → go to register step (OTP already confirmed implicitly by server)
-      // We store OTP so we can attach it to registration if needed — for now just proceed
-      setStep("register");
+      // New user → verify OTP on backend first (proves email ownership) then register
+      verifyOtpMutation.mutate(
+        { data: { emailOrPhone: email.trim(), otp: code.trim() } },
+        {
+          onSuccess: (res) => {
+            if (!res.valid) { setOtpError("الكود غير صحيح، حاول مجدداً"); return; }
+            setStep("register");
+          },
+          onError: () => setOtpError("الكود غير صحيح أو منتهي الصلاحية"),
+        },
+      );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, userExists]);

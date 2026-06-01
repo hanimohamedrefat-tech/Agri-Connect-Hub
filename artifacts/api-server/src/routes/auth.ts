@@ -11,6 +11,9 @@ const router: IRouter = Router();
 // In-memory OTP store: key = email or phone, value = { otp, expiresAt }
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 
+// Pre-verified emails for new-user registration (30 min TTL)
+const preVerifiedEmails = new Map<string, number>();
+
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -92,6 +95,10 @@ router.post("/auth/verify-otp", (req, res): void => {
   }
 
   otpStore.delete(key);
+
+  // Mark email as pre-verified for new-user registration (30 min window)
+  preVerifiedEmails.set(key, Date.now() + 30 * 60 * 1000);
+
   res.json({ valid: true });
 });
 
@@ -103,7 +110,16 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
-  const [existingEmail] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+  // Require prior OTP email verification
+  const emailKey = email.trim().toLowerCase();
+  const verifiedUntil = preVerifiedEmails.get(emailKey);
+  if (!verifiedUntil || Date.now() > verifiedUntil) {
+    res.status(400).json({ error: "يجب التحقق من بريدك الإلكتروني أولاً عبر الكود المُرسَل" });
+    return;
+  }
+  preVerifiedEmails.delete(emailKey);
+
+  const [existingEmail] = await db.select().from(usersTable).where(eq(usersTable.email, emailKey));
   if (existingEmail) {
     res.status(400).json({ error: "البريد الإلكتروني مستخدم بالفعل" });
     return;
