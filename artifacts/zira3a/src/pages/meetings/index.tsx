@@ -17,7 +17,7 @@ export default function Meetings() {
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCode.trim()) return;
-    joinMutation.mutate({ data: { joinCode: joinCode.trim() } }, {
+    joinMutation.mutate({ joinCode: joinCode.trim() }, {
       onSuccess: (res) => {
         setLocation(`/meetings/${res.id}`);
       }

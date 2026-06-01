@@ -24,12 +24,12 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { clearToken } from "@/lib/auth";
 import { useSocket } from "@/context/SocketContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation as useWouterLocation } from "wouter";
 import { useLang } from "@/context/LangContext";
 import { useTheme } from "@/context/ThemeContext";
-import { useGetTrendingPosts, useGetSuggestedUsers } from "@workspace/api-client-react";
+import { useGetTrendingPosts, useGetSuggestedUsers, useFollowUser } from "@workspace/api-client-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading } = useGetMe();
@@ -41,6 +41,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { colorTheme, setColorTheme, darkMode, toggleDark } = useTheme();
   const { data: trending } = useGetTrendingPosts();
   const { data: suggested } = useGetSuggestedUsers();
+  const followMutation = useFollowUser();
+  const [followedUsernames, setFollowedUsernames] = useState<Set<string>>(new Set());
+
+  const handleFollow = (username: string) => {
+    followMutation.mutate({ username }, {
+      onSuccess: () => setFollowedUsernames(prev => new Set([...prev, username])),
+    });
+  };
 
   const handleLogout = () => {
     clearToken();
@@ -53,6 +61,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       queryClient.invalidateQueries({ queryKey: getGetNotificationSummaryQueryKey() });
     }
   }, [location]);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setLocation("/");
+    }
+  }, [isLoading, user]);
 
   if (isLoading) {
     return (
@@ -68,7 +82,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <>{children}</>;
+    return null;
   }
 
   const navItems = [
@@ -135,8 +149,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* New Post Button */}
         <div className="px-4 py-3">
-          <Button size="default" className="w-full rounded-xl font-bold shadow-sm text-sm h-10">
-            {t.newPost}
+          <Button asChild size="default" className="w-full rounded-xl font-bold shadow-sm text-sm h-10">
+            <Link href="/feed">
+              {t.newPost}
+            </Link>
           </Button>
         </div>
 
@@ -254,8 +270,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       <p className="text-xs text-muted-foreground truncate">@{u.username}</p>
                     </div>
                   </Link>
-                  <Button variant="outline" size="sm" className="rounded-full h-7 text-xs px-3 shrink-0 font-medium">
-                    {t.follow}
+                  <Button
+                    variant={followedUsernames.has(u.username) ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full h-7 text-xs px-3 shrink-0 font-medium"
+                    disabled={followedUsernames.has(u.username) || followMutation.isPending}
+                    onClick={() => handleFollow(u.username)}
+                  >
+                    {followedUsernames.has(u.username) ? (lang === "ar" ? "متابَع" : "Following") : t.follow}
                   </Button>
                 </div>
               ))}
@@ -266,7 +288,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Footer */}
         <div className="mt-auto">
           <p className="text-xs text-muted-foreground text-center">
-            {lang === "ar" ? "© 2025 زراعة" : "© 2025 Zira3a"}
+            {lang === "ar" ? "© 2026 زراعة" : "© 2026 Zira3a"}
           </p>
         </div>
       </aside>

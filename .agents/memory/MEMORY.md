@@ -1,2 +1,4 @@
 - [Socket.io architecture](socket-architecture.md) — Socket.io path is `/api/socket.io`; JWT auth via socket.handshake.auth.token; rooms: user:{id}, conversation:{id}, meeting:{id}
 - [Database schema push required](db-schema-push.md) — run `pnpm --filter @workspace/db run push` on fresh import; tables don't auto-create, causing 500 "Failed query" errors
+- [Production deployment config](deployment-config.md) — VM type (Socket.io needs persistent connections); build: frontend then API; run: PORT=5000 node artifacts/api-server/dist/index.mjs
+- [Follow mutation uses username](follow-mutation.md) — useFollowUser mutate expects { username: string }, NOT { userId: number }; joinMeetingByCode expects { joinCode: string } not { data: { joinCode } }
