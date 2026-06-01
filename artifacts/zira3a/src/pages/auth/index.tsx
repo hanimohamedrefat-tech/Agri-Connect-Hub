@@ -169,7 +169,7 @@ export default function AuthPage() {
 
         {/* Brand */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <ZiraBrand size="lg" />
+          <ZiraBrand size={64} />
           <p className="text-sm text-muted-foreground">
             {step === "email" && "أدخل بريدك الإلكتروني للدخول أو التسجيل"}
             {step === "otp" && (userExists ? "أهلاً بعودتك! أدخل الكود لتسجيل الدخول" : "حساب جديد — أدخل الكود للمتابعة")}
