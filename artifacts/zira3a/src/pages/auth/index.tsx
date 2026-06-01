@@ -5,22 +5,7 @@ import { setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, ArrowRight, ArrowLeft, Eye, EyeOff, ChevronDown } from "lucide-react";
-
-// ── Logo SVG ──────────────────────────────────────────────────────────────
-function ZiraLogo({ size = 48 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="24" cy="24" r="23" fill="currentColor" fillOpacity="0.1" />
-      <line x1="24" y1="40" x2="24" y2="14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      <ellipse cx="24" cy="11" rx="4" ry="5.5" fill="currentColor" />
-      <ellipse cx="18.5" cy="16.5" rx="3.2" ry="4.5" fill="currentColor" transform="rotate(-25 18.5 16.5)" />
-      <ellipse cx="29.5" cy="16.5" rx="3.2" ry="4.5" fill="currentColor" transform="rotate(25 29.5 16.5)" />
-      <ellipse cx="19.5" cy="22" rx="2.8" ry="4" fill="currentColor" transform="rotate(-30 19.5 22)" />
-      <ellipse cx="28.5" cy="22" rx="2.8" ry="4" fill="currentColor" transform="rotate(30 28.5 22)" />
-      <path d="M20 40 Q24 37 28 40" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-    </svg>
-  );
-}
+import { ZiraBrand } from "@/components/ZiraLogo";
 
 // ── OTP Input (6 boxes) ───────────────────────────────────────────────────
 function OtpInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -208,12 +193,8 @@ export default function AuthPage() {
       <div className="relative z-10 flex flex-col min-h-screen">
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 pt-8 pb-4">
-          <div className="text-primary"><ZiraLogo size={46} /></div>
-          <div>
-            <div className="text-xl font-black text-primary leading-none tracking-tight">زراعة.كوم</div>
-            <div className="text-xs text-muted-foreground/80 leading-none mt-1 font-medium">عالم الزراعة</div>
-          </div>
+        <div className="px-6 pt-8 pb-4">
+          <ZiraBrand size={46} lang="ar" showTagline />
         </div>
 
         <div className="flex-1 flex flex-col justify-center px-6 pb-10 max-w-md mx-auto w-full">
@@ -305,13 +286,6 @@ export default function AuthPage() {
                   أرسلنا كود التحقق إلى <span className="font-bold text-foreground" dir="ltr">{identifier}</span>
                 </p>
               </div>
-
-              {demoCode && (
-                <div className="rounded-xl border border-border/40 bg-muted/30 px-4 py-3 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">كودك هو</p>
-                  <p className="text-3xl font-black tracking-[0.3em] text-foreground font-mono" dir="ltr">{demoCode}</p>
-                </div>
-              )}
 
               <div className="space-y-5">
                 <OtpInput value={otp} onChange={v => { setOtp(v); setOtpError(""); }} />

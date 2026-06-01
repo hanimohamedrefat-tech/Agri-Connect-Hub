@@ -20,6 +20,7 @@ import {
   UserPlus,
   BarChart3,
 } from "lucide-react";
+import { ZiraBrand, ZiraLogo } from "@/components/ZiraLogo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { clearToken } from "@/lib/auth";
@@ -72,8 +73,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center animate-pulse">
-            <Leaf className="w-6 h-6 text-primary" />
+          <div className="text-primary animate-pulse">
+            <ZiraLogo size={52} />
           </div>
           <p className="text-muted-foreground text-sm">{t.loading}</p>
         </div>
@@ -108,14 +109,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="w-full md:w-60 lg:w-72 border-b md:border-b-0 md:border-e border-border/40 flex flex-col sticky top-0 md:h-screen overflow-y-auto">
         {/* Logo */}
         <div className="p-4 pb-2">
-          <div className="flex items-center gap-3 px-2 py-3">
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-primary-foreground shadow-sm">
-              <Leaf className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-primary leading-none">{lang === "ar" ? "زراعة.كوم" : "Zira3a.com"}</h1>
-              <p className="text-[10px] text-muted-foreground leading-none mt-0.5">{lang === "ar" ? "عالم الزراعة" : "World of Agriculture"}</p>
-            </div>
+          <div className="px-2 py-3">
+            <ZiraBrand size={38} lang={lang as "ar" | "en"} showTagline />
           </div>
         </div>
 
