@@ -19,6 +19,7 @@ import {
   TrendingUp,
   UserPlus,
   BarChart3,
+  BadgeCheck,
 } from "lucide-react";
 import { ZiraBrand, ZiraLogo } from "@/components/ZiraLogo";
 import { Button } from "@/components/ui/button";
@@ -94,13 +95,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { icon: MessageSquare, label: t.messages, href: "/messages" },
     { icon: Bookmark, label: t.bookmarks, href: "/bookmarks" },
     { icon: BarChart3, label: t.stats, href: "/stats" },
+    { icon: BadgeCheck, label: lang === "ar" ? "التوثيق" : "Verify", href: "/verify", highlight: !user?.isVerified },
     { icon: Settings, label: t.settings, href: "/settings" },
   ];
 
   const themes = [
     { id: "green" as const, label: t.green, icon: Leaf, color: "bg-emerald-500" },
-    { id: "ocean" as const, label: t.ocean, icon: Waves, color: "bg-sky-500" },
-    { id: "violet" as const, label: t.violet, icon: Sparkles, color: "bg-violet-500" },
+    { id: "ocean" as const, label: t.ocean, icon: Waves, color: "bg-amber-500" },
+    { id: "violet" as const, label: t.violet, icon: Sparkles, color: "bg-emerald-900" },
   ];
 
   return (
@@ -118,6 +120,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 px-3 space-y-0.5">
           {navItems.map((item) => {
             const isActive = location === item.href || (item.href === "/feed" && location === "/");
+            const isHighlight = (item as any).highlight;
             return (
               <Link
                 key={item.href}
@@ -125,11 +128,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 font-medium text-[15px] group ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-sm"
+                    : isHighlight
+                    ? "text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/30"
                     : "text-foreground hover:bg-muted"
                 }`}
               >
                 <div className="relative shrink-0">
-                  <item.icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? "" : ""}`} />
+                  <item.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
                   {item.badge != null && item.badge > 0 && (
                     <span className="absolute -top-2 -end-2 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
                       {item.badge > 99 ? "99+" : item.badge}
@@ -206,7 +211,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col min-w-0">
-                <span className="font-bold text-sm leading-tight truncate">{user.displayName}</span>
+                <span className="font-bold text-sm leading-tight truncate flex items-center gap-1">
+                  {user.displayName}
+                  {user.isVerified && <BadgeCheck className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
+                </span>
                 <span className="text-muted-foreground text-xs truncate">@{user.username}</span>
               </div>
             </Link>

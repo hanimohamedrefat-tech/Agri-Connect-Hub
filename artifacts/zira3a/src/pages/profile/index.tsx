@@ -5,7 +5,7 @@ import { PostCard } from "@/components/shared/PostCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ArrowRight, MapPin, Link as LinkIcon, Calendar, Loader2, Camera } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Link as LinkIcon, Calendar, Loader2, Camera, BadgeCheck } from "lucide-react";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useQueryClient } from "@tanstack/react-query";
@@ -196,7 +196,12 @@ export default function Profile() {
           {/* User info */}
           <div className="space-y-2">
             <div>
-              <h2 className="text-xl font-bold leading-tight">{user.displayName}</h2>
+              <h2 className="text-xl font-bold leading-tight flex items-center gap-1.5">
+                {user.displayName}
+                {user.isVerified && (
+                  <BadgeCheck className="w-5 h-5 text-blue-500 shrink-0" />
+                )}
+              </h2>
               <p className="text-muted-foreground text-sm">@{user.username}</p>
             </div>
 

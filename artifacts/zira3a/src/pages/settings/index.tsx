@@ -111,8 +111,8 @@ export default function Settings() {
 
   const themeOptions = [
     { id: "green" as const, label: t.green, icon: Leaf, colors: ["bg-emerald-500", "bg-amber-400"] },
-    { id: "ocean" as const, label: t.ocean, icon: Waves, colors: ["bg-sky-500", "bg-cyan-400"] },
-    { id: "violet" as const, label: t.violet, icon: Sparkles, colors: ["bg-violet-500", "bg-pink-400"] },
+    { id: "ocean" as const, label: t.ocean, icon: Waves, colors: ["bg-amber-500", "bg-orange-400"] },
+    { id: "violet" as const, label: t.violet, icon: Sparkles, colors: ["bg-emerald-800", "bg-emerald-600"] },
   ];
 
   return (

@@ -193,4 +193,15 @@ export function sanitizeUser(
   };
 }
 
+// POST /auth/request-verification — grant verification to the authenticated user (demo)
+router.post("/auth/request-verification", authMiddleware, async (req: AuthRequest, res): Promise<void> => {
+  try {
+    const userId = req.userId!;
+    await db.update(usersTable).set({ isVerified: true }).where(eq(usersTable.id, userId));
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: "Failed to verify user" });
+  }
+});
+
 export default router;

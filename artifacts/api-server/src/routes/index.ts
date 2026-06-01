@@ -13,6 +13,7 @@ import uploadRouter from "./upload";
 import statsRouter from "./stats";
 import storiesRouter from "./stories";
 import storageRouter from "./storage";
+import adsRouter from "./ads";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(conversationsRouter);
 router.use(meetingsRouter);
 router.use(userPostsRouter);
 router.use(storiesRouter);
+router.use(adsRouter);
 
 export default router;

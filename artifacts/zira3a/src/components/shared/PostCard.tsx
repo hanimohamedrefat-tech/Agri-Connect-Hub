@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Repeat2, Bookmark, MoreHorizontal, Send } from "lucide-react";
+import { Heart, MessageCircle, Repeat2, Bookmark, MoreHorizontal, Send, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
@@ -115,8 +115,11 @@ export function PostCard({ post, isDetailed = false }: PostCardProps) {
             {/* Header */}
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0">
-                <Link href={`/profile/${post.author.username}`} className="font-bold text-[15px] hover:text-primary transition-colors truncate">
+                <Link href={`/profile/${post.author.username}`} className="font-bold text-[15px] hover:text-primary transition-colors truncate inline-flex items-center gap-1">
                   {post.author.displayName}
+                  {post.author.isVerified && (
+                    <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" />
+                  )}
                 </Link>
                 {post.author.specialty && (
                   <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium hidden sm:inline-block shrink-0">

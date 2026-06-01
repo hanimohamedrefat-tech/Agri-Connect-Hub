@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useGetFeed, useCreatePost, useGetMe } from "@workspace/api-client-react";
 import { PostCard } from "@/components/shared/PostCard";
+import { AdCard } from "@/components/shared/AdCard";
 import { StoriesBar } from "@/components/shared/StoriesBar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +10,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetFeedQueryKey } from "@workspace/api-client-react";
 import { useLang } from "@/context/LangContext";
 import { getToken } from "@/lib/auth";
+
+interface Ad {
+  id: number;
+  title: string;
+  body: string;
+  imageUrl?: string | null;
+  linkUrl: string;
+  sponsorName: string;
+}
 
 export default function Feed() {
   const { data: user } = useGetMe();
@@ -21,6 +31,14 @@ export default function Feed() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t, lang } = useLang();
+  const [activeAd, setActiveAd] = useState<Ad | null>(null);
+
+  useEffect(() => {
+    fetch("/api/ads/active")
+      .then(r => r.ok ? r.json() : null)
+      .then(ad => { if (ad) setActiveAd(ad); })
+      .catch(() => {});
+  }, []);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -260,9 +278,13 @@ export default function Feed() {
             <span className="text-sm">{t.loadingPosts}</span>
           </div>
         ) : Array.isArray(posts) && posts.length > 0 ? (
-          posts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))
+          posts.flatMap((post, index) => {
+            const items: React.ReactNode[] = [<PostCard key={post.id} post={post} />];
+            if (activeAd && (index + 1) % 5 === 0) {
+              items.push(<AdCard key={`ad-${index}`} ad={activeAd} />);
+            }
+            return items;
+          })
         ) : (
           <div className="p-12 text-center">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
