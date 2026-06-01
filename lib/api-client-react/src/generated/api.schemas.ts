@@ -21,6 +21,26 @@ export interface RegisterInput {
   password: string;
   displayName: string;
   specialty?: string;
+  phone?: string;
+}
+
+export interface SendOtpInput {
+  emailOrPhone: string;
+}
+
+export interface OtpSentResult {
+  message: string;
+  userExists: boolean;
+  demoCode?: string;
+}
+
+export interface VerifyOtpInput {
+  emailOrPhone: string;
+  otp: string;
+}
+
+export interface OtpVerifyResult {
+  valid: boolean;
 }
 
 export interface LoginInput {
@@ -33,6 +53,8 @@ export interface User {
   username: string;
   displayName: string;
   email: string;
+  /** @nullable */
+  phone?: string | null;
   /** @nullable */
   bio?: string | null;
   /** @nullable */

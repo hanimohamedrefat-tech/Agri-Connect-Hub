@@ -12,6 +12,8 @@ export interface User {
   displayName: string;
   email: string;
   /** @nullable */
+  phone?: string | null;
+  /** @nullable */
   bio?: string | null;
   /** @nullable */
   avatar?: string | null;

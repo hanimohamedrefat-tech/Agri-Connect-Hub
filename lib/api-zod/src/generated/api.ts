@@ -30,7 +30,35 @@ export const RegisterBody = zod.object({
   "email": zod.string(),
   "password": zod.string().min(registerBodyPasswordMin),
   "displayName": zod.string(),
-  "specialty": zod.string().optional()
+  "specialty": zod.string().optional(),
+  "phone": zod.string().optional()
+})
+
+
+/**
+ * @summary Send OTP code to email or phone
+ */
+export const SendOtpBody = zod.object({
+  "emailOrPhone": zod.string()
+})
+
+export const SendOtpResponse = zod.object({
+  "message": zod.string(),
+  "userExists": zod.boolean(),
+  "demoCode": zod.string().optional()
+})
+
+
+/**
+ * @summary Verify OTP code
+ */
+export const VerifyOtpBody = zod.object({
+  "emailOrPhone": zod.string(),
+  "otp": zod.string()
+})
+
+export const VerifyOtpResponse = zod.object({
+  "valid": zod.boolean()
 })
 
 
@@ -48,6 +76,7 @@ export const LoginResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -81,6 +110,7 @@ export const GetMeResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -114,6 +144,7 @@ export const ListUsersResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -142,6 +173,7 @@ export const GetUserByUsernameResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -179,6 +211,7 @@ export const UpdateProfileResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -211,6 +244,7 @@ export const ListUserPostsResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -251,6 +285,7 @@ export const GetUserFollowersResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -279,6 +314,7 @@ export const GetUserFollowingResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -303,6 +339,7 @@ export const GetSuggestedUsersResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -342,6 +379,7 @@ export const ListPostsResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -403,6 +441,7 @@ export const GetFeedResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -449,6 +488,7 @@ export const GetTrendingPostsResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -494,6 +534,7 @@ export const GetPostResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -579,6 +620,7 @@ export const GetBookmarksResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -623,6 +665,7 @@ export const ListPostCommentsResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -705,6 +748,7 @@ export const GetNotificationsResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -752,6 +796,7 @@ export const ListConversationsResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -798,6 +843,7 @@ export const ListConversationMessagesResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -843,6 +889,7 @@ export const ListMeetingsResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -894,6 +941,7 @@ export const GetUpcomingMeetingsResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -935,6 +983,7 @@ export const GetMeetingResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -982,6 +1031,7 @@ export const UpdateMeetingResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -1034,6 +1084,7 @@ export const JoinMeetingByCodeResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -1075,6 +1126,7 @@ export const GetMeetingParticipantsResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -1111,6 +1163,7 @@ export const StartMeetingResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),
@@ -1151,6 +1204,7 @@ export const EndMeetingResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string(),
+  "phone": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "avatar": zod.string().nullish(),
   "coverPhoto": zod.string().nullish(),

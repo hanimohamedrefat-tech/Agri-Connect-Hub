@@ -66,6 +66,44 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
 
+  /auth/send-otp:
+    post:
+      operationId: sendOtp
+      tags: [auth]
+      summary: Send OTP code to email or phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOtpInput"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpSentResult"
+
+  /auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      summary: Verify OTP code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpInput"
+      responses:
+        "200":
+          description: OTP verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpVerifyResult"
+
   /auth/login:
     post:
       operationId: login
@@ -976,6 +1014,42 @@ components:
           type: string
         specialty:
           type: string
+        phone:
+          type: string
+
+    SendOtpInput:
+      type: object
+      required: [emailOrPhone]
+      properties:
+        emailOrPhone:
+          type: string
+
+    OtpSentResult:
+      type: object
+      required: [message, userExists]
+      properties:
+        message:
+          type: string
+        userExists:
+          type: boolean
+        demoCode:
+          type: string
+
+    VerifyOtpInput:
+      type: object
+      required: [emailOrPhone, otp]
+      properties:
+        emailOrPhone:
+          type: string
+        otp:
+          type: string
+
+    OtpVerifyResult:
+      type: object
+      required: [valid]
+      properties:
+        valid:
+          type: boolean
 
     LoginInput:
       type: object
@@ -1008,6 +1082,8 @@ components:
           type: string
         email:
           type: string
+        phone:
+          type: ["string", "null"]
         bio:
           type: ["string", "null"]
         avatar:
