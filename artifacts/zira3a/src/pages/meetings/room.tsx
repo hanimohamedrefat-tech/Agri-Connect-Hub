@@ -32,6 +32,7 @@ function VideoTile({
   isSpeaking,
   isHost,
   isScreenShare,
+  isHandRaised,
 }: {
   stream: MediaStream | null;
   muted?: boolean;
@@ -41,6 +42,7 @@ function VideoTile({
   isSpeaking?: boolean;
   isHost?: boolean;
   isScreenShare?: boolean;
+  isHandRaised?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -53,7 +55,9 @@ function VideoTile({
   const hasVideo = stream && stream.getVideoTracks().some(t => t.enabled) && !isVideoOff;
 
   return (
-    <div className={`relative rounded-xl overflow-hidden bg-black/60 border-2 ${isSpeaking ? "border-primary" : isScreenShare ? "border-blue-400" : "border-transparent"} transition-colors min-h-[180px]`}>
+    <div className={`relative rounded-xl overflow-hidden bg-black/60 border-2 ${
+      isHandRaised ? "border-orange-400" : isSpeaking ? "border-primary" : isScreenShare ? "border-blue-400" : "border-transparent"
+    } transition-colors min-h-[180px]`}>
       {hasVideo ? (
         <video
           ref={videoRef}
@@ -72,6 +76,15 @@ function VideoTile({
       {!hasVideo && stream && (
         <audio ref={(el) => { if (el) el.srcObject = stream; }} autoPlay />
       )}
+
+      {/* Raised hand badge — top corner */}
+      {isHandRaised && (
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-orange-500/90 backdrop-blur px-2.5 py-1.5 rounded-full animate-bounce shadow-lg">
+          <Hand className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white">يد مرفوعة</span>
+        </div>
+      )}
+
       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
         <div className="bg-black/60 backdrop-blur px-3 py-1.5 rounded-lg flex items-center gap-2 max-w-[70%]">
           {audioMuted
@@ -102,6 +115,7 @@ export default function MeetingRoom() {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
+  const [raisedHands, setRaisedHands] = useState<Set<number>>(new Set());
   const [sidebarPanel, setSidebarPanel] = useState<"chat" | "participants" | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -155,12 +169,28 @@ export default function MeetingRoom() {
 
     socket.on("meeting:participant_left", (data: { userId: number }) => {
       setLiveParticipants(prev => prev.filter(p => p.userId !== data.userId));
+      setRaisedHands(prev => { const n = new Set(prev); n.delete(data.userId); return n; });
+    });
+
+    socket.on("meeting:hand_raised", (data: { userId: number; displayName: string }) => {
+      setRaisedHands(prev => new Set([...prev, data.userId]));
+      toast({
+        title: "✋ " + data.displayName,
+        description: "رفع يده ويريد التحدث",
+        duration: 4000,
+      });
+    });
+
+    socket.on("meeting:hand_lowered", (data: { userId: number }) => {
+      setRaisedHands(prev => { const n = new Set(prev); n.delete(data.userId); return n; });
     });
 
     return () => {
       socket.off("meeting:chat_message");
       socket.off("meeting:participant_joined");
       socket.off("meeting:participant_left");
+      socket.off("meeting:hand_raised");
+      socket.off("meeting:hand_lowered");
       socket.emit("leave:meeting", { meetingId });
     };
   }, [meetingId, me?.id]);
@@ -231,6 +261,7 @@ export default function MeetingRoom() {
               isSpeaking={!isMuted}
               isHost={me?.id === meeting?.hostId}
               isScreenShare={isScreenSharing}
+              isHandRaised={isHandRaised}
             />
 
             {/* Remote tiles */}
@@ -242,6 +273,7 @@ export default function MeetingRoom() {
                   stream={stream}
                   name={participant?.displayName ?? `مشارك ${uid}`}
                   isHost={uid === meeting?.hostId}
+                  isHandRaised={raisedHands.has(uid)}
                 />
               );
             })}
@@ -257,6 +289,7 @@ export default function MeetingRoom() {
                   isVideoOff
                   isMuted
                   isHost={p.userId === meeting?.hostId}
+                  isHandRaised={raisedHands.has(p.userId)}
                 />
               ))}
           </div>
@@ -325,6 +358,7 @@ export default function MeetingRoom() {
                       {me.id === meeting?.hostId && <div className="text-[10px] text-primary">المستضيف</div>}
                     </div>
                     <div className="flex gap-2 text-white/40 shrink-0">
+                      {isHandRaised && <Hand className="w-4 h-4 text-orange-400" />}
                       {isScreenSharing && <MonitorUp className="w-4 h-4 text-blue-400" />}
                       {isVideoOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4 text-white" />}
                       {isMuted ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4 text-white" />}
@@ -342,6 +376,7 @@ export default function MeetingRoom() {
                       {p.userId === meeting?.hostId && <div className="text-[10px] text-primary">المستضيف</div>}
                     </div>
                     <div className="flex gap-2 shrink-0">
+                      {raisedHands.has(p.userId) && <Hand className="w-4 h-4 text-orange-400" />}
                       {remoteStreams.has(p.userId)
                         ? <Video className="w-4 h-4 text-white" />
                         : <VideoOff className="w-4 h-4 text-white/40" />}
@@ -405,10 +440,18 @@ export default function MeetingRoom() {
           title={isHandRaised ? "إنزال اليد" : "رفع اليد"}
           className={`w-12 h-12 rounded-full ${
             isHandRaised
-              ? "bg-orange-500 hover:bg-orange-600 text-white"
+              ? "bg-orange-500 hover:bg-orange-600 text-white ring-2 ring-orange-300"
               : "bg-[#2c302c] hover:bg-[#3c403c] text-white"
           }`}
-          onClick={() => setIsHandRaised(v => !v)}
+          onClick={() => {
+            const next = !isHandRaised;
+            setIsHandRaised(next);
+            if (next) {
+              getSocket().emit("meeting:raise_hand", { meetingId });
+            } else {
+              getSocket().emit("meeting:lower_hand", { meetingId });
+            }
+          }}
         >
           <Hand className="w-5 h-5" />
         </Button>

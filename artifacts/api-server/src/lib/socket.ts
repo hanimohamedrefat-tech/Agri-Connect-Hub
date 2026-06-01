@@ -76,6 +76,17 @@ export function createSocketServer(httpServer: HTTPServer) {
       });
     });
 
+    socket.on("meeting:raise_hand", ({ meetingId }: { meetingId: number }) => {
+      socket.to(`meeting:${meetingId}`).emit("meeting:hand_raised", {
+        userId,
+        displayName: socket.data.displayName ?? "مشارك",
+      });
+    });
+
+    socket.on("meeting:lower_hand", ({ meetingId }: { meetingId: number }) => {
+      socket.to(`meeting:${meetingId}`).emit("meeting:hand_lowered", { userId });
+    });
+
     // ── WebRTC signaling relay ──────────────────────────────────────────────
 
     socket.on("webrtc:offer", ({ targetUserId, meetingId, offer }: {
