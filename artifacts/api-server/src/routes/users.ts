@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, followsTable } from "@workspace/db";
-import { eq, ilike, and, sql } from "drizzle-orm";
+import { eq, ilike, and, or, sql } from "drizzle-orm";
 import { authMiddleware, optionalAuth, type AuthRequest } from "../middlewares/auth";
 import { sanitizeUser } from "./auth";
 
@@ -33,7 +33,14 @@ router.get("/users", optionalAuth, async (req: AuthRequest, res): Promise<void> 
 
   let query = db.select().from(usersTable);
   const conditions = [];
-  if (search) conditions.push(ilike(usersTable.displayName, `%${search}%`));
+  if (search) {
+    conditions.push(
+      or(
+        ilike(usersTable.displayName, `%${search}%`),
+        ilike(usersTable.username, `%${search}%`)
+      )!
+    );
+  }
   if (specialty) conditions.push(eq(usersTable.specialty, specialty));
 
   const users = conditions.length

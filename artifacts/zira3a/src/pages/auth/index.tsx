@@ -307,12 +307,9 @@ export default function AuthPage() {
               </div>
 
               {demoCode && (
-                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3 flex items-start gap-3">
-                  <span className="text-xl mt-0.5">🔑</span>
-                  <div>
-                    <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">كود التجربة (للتطوير فقط):</div>
-                    <div className="text-2xl font-black tracking-[0.25em] text-amber-800 dark:text-amber-300" dir="ltr">{demoCode}</div>
-                  </div>
+                <div className="rounded-xl border border-border/40 bg-muted/30 px-4 py-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">كودك هو</p>
+                  <p className="text-3xl font-black tracking-[0.3em] text-foreground font-mono" dir="ltr">{demoCode}</p>
                 </div>
               )}
 

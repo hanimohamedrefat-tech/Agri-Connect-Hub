@@ -45,5 +45,8 @@ export * from './storyInput';
 export * from './storyUser';
 export * from './trendingData';
 export * from './trendingHashtag';
+export * from './uploadUrlRequest';
+export * from './uploadUrlResponse';
+export * from './uploadUrlResponseMetadata';
 export * from './user';
 export * from './verifyOtpInput';

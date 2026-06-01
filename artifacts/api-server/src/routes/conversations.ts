@@ -1,14 +1,15 @@
 import { Router, type IRouter } from "express";
 import { db, conversationsTable, conversationParticipantsTable, messagesTable, usersTable } from "@workspace/db";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, gt, sql } from "drizzle-orm";
 import { authMiddleware, type AuthRequest } from "../middlewares/auth";
 import { emitToConversation, emitToUser } from "../lib/socket";
 
 const router: IRouter = Router();
 
 async function getConversationWithDetails(convId: number, currentUserId: number) {
-  const participants = await db.select({ userId: conversationParticipantsTable.userId })
-    .from(conversationParticipantsTable).where(eq(conversationParticipantsTable.conversationId, convId));
+  const participants = await db.select()
+    .from(conversationParticipantsTable)
+    .where(eq(conversationParticipantsTable.conversationId, convId));
 
   const participantUsers = await Promise.all(participants.map(async p => {
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, p.userId));
@@ -38,11 +39,29 @@ async function getConversationWithDetails(convId: number, currentUserId: number)
     .orderBy(desc(messagesTable.createdAt)).limit(1);
 
   const [conv] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, convId));
+
+  // Calculate real unread count: messages after lastReadAt, not sent by current user
+  const myParticipant = participants.find(p => p.userId === currentUserId);
+  let unreadCount = 0;
+  if (myParticipant) {
+    const conditions = [
+      eq(messagesTable.conversationId, convId),
+      sql`${messagesTable.senderId} != ${currentUserId}`,
+    ];
+    if (myParticipant.lastReadAt) {
+      conditions.push(gt(messagesTable.createdAt, myParticipant.lastReadAt));
+    }
+    const [cnt] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(messagesTable)
+      .where(and(...conditions));
+    unreadCount = cnt?.count ?? 0;
+  }
+
   return {
     id: convId,
     participants: participantUsers.filter(Boolean),
     lastMessage: lastMsg ? { id: lastMsg.id, content: lastMsg.content, createdAt: lastMsg.createdAt.toISOString() } : null,
-    unreadCount: 0,
+    unreadCount,
     createdAt: conv?.createdAt.toISOString() ?? new Date().toISOString(),
   };
 }
@@ -94,6 +113,14 @@ router.post("/conversations", authMiddleware, async (req: AuthRequest, res): Pro
 
 router.get("/conversations/:conversationId/messages", authMiddleware, async (req: AuthRequest, res): Promise<void> => {
   const conversationId = parseInt(req.params.conversationId as string, 10);
+
+  // Mark conversation as read for current user
+  await db.update(conversationParticipantsTable)
+    .set({ lastReadAt: new Date() })
+    .where(and(
+      eq(conversationParticipantsTable.conversationId, conversationId),
+      eq(conversationParticipantsTable.userId, req.userId!),
+    ));
 
   const messages = await db.select().from(messagesTable)
     .where(eq(messagesTable.conversationId, conversationId))

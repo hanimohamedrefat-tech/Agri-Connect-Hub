@@ -12,6 +12,7 @@ import userPostsRouter from "./userPosts";
 import uploadRouter from "./upload";
 import statsRouter from "./stats";
 import storiesRouter from "./stories";
+import storageRouter from "./storage";
 
 const router: IRouter = Router();
 
@@ -19,6 +20,7 @@ router.use(healthRouter);
 router.use(statsRouter);
 router.use(authRouter);
 router.use(usersRouter);
+router.use(storageRouter);
 router.use(uploadRouter);
 router.use(postsRouter);
 router.use(commentsRouter);

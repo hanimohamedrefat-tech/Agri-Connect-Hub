@@ -300,6 +300,24 @@ export interface StoryInput {
   caption?: string;
 }
 
+export interface UploadUrlRequest {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export type UploadUrlResponseMetadata = {
+  name?: string;
+  size?: number;
+  contentType?: string;
+};
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: UploadUrlResponseMetadata;
+}
+
 export type ListUsersParams = {
 search?: string;
 specialty?: string;
