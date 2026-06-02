@@ -171,7 +171,7 @@ export default function AuthPage() {
         },
       },
       {
-        onSuccess: (res) => { setToken(res.token); window.location.href = "/feed"; },
+        onSuccess: (res) => { setToken(res.token); window.location.href = "/welcome"; },
         onError: (err: unknown) => {
           const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
           setError(msg ?? "حدث خطأ، حاول مجدداً");
