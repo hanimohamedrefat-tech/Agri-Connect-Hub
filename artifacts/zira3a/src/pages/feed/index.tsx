@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetFeedQueryKey } from "@workspace/api-client-react";
 import { useLang } from "@/context/LangContext";
 import { getToken } from "@/lib/auth";
+import { useLocation } from "wouter";
 
 interface Ad {
   id: number;
@@ -24,6 +25,7 @@ export default function Feed() {
   const { data: user } = useGetMe();
   const { data: posts, isLoading } = useGetFeed();
   const createPostMutation = useCreatePost();
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const [content, setContent] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -112,6 +114,24 @@ export default function Feed() {
       <div className="sticky top-0 z-20 bg-background/85 backdrop-blur-xl border-b border-border/50 px-4 py-3">
         <h1 className="text-[17px] font-bold">{t.home}</h1>
       </div>
+
+      {/* Interest hashtag chips */}
+      {user?.interests && user.interests.length > 0 && (
+        <div className="px-4 py-2.5 border-b border-border/40 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 w-max">
+            {(user.interests as string[]).map((tag: string) => (
+              <button
+                key={tag}
+                onClick={() => navigate(`/explore?hashtag=${encodeURIComponent(tag)}`)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/20 text-primary text-xs font-bold hover:bg-primary/15 transition-colors whitespace-nowrap"
+              >
+                <Hash className="w-3 h-3" />
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stories Bar */}
       <StoriesBar />

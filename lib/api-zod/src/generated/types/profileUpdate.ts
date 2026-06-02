@@ -14,4 +14,5 @@ export interface ProfileUpdate {
   website?: string;
   avatar?: string;
   coverPhoto?: string;
+  interests?: string[];
 }

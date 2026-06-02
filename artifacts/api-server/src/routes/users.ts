@@ -78,7 +78,7 @@ router.patch("/users/:username/update", authMiddleware, async (req: AuthRequest,
     return;
   }
 
-  const { displayName, bio, specialty, location, website, avatar, coverPhoto } = req.body;
+  const { displayName, bio, specialty, location, website, avatar, coverPhoto, interests } = req.body;
   const updateData: Partial<typeof usersTable.$inferSelect> = {};
   if (displayName != null) updateData.displayName = displayName;
   if (bio != null) updateData.bio = bio;
@@ -87,6 +87,7 @@ router.patch("/users/:username/update", authMiddleware, async (req: AuthRequest,
   if (website != null) updateData.website = website;
   if (avatar != null) updateData.avatar = avatar;
   if (coverPhoto != null) updateData.coverPhoto = coverPhoto;
+  if (Array.isArray(interests)) updateData.interests = interests;
 
   const [updated] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, user.id)).returning();
   const result = await getUserWithCounts(updated.id, req.userId);

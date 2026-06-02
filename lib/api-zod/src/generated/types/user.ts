@@ -25,6 +25,7 @@ export interface User {
   location?: string | null;
   /** @nullable */
   website?: string | null;
+  interests?: string[] | null;
   isVerified?: boolean;
   followersCount: number;
   followingCount: number;

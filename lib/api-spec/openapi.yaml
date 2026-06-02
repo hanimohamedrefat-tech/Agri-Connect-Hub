@@ -1142,6 +1142,11 @@ components:
           type: ["string", "null"]
         website:
           type: ["string", "null"]
+        interests:
+          type: array
+          items:
+            type: string
+          nullable: true
         isVerified:
           type: boolean
         followersCount:
@@ -1172,6 +1177,10 @@ components:
           type: string
         coverPhoto:
           type: string
+        interests:
+          type: array
+          items:
+            type: string
 
     # Posts
     Post:

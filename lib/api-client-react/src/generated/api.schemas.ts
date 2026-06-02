@@ -67,6 +67,7 @@ export interface User {
   location?: string | null;
   /** @nullable */
   website?: string | null;
+  interests?: string[] | null;
   isVerified?: boolean;
   followersCount: number;
   followingCount: number;
@@ -88,6 +89,7 @@ export interface ProfileUpdate {
   website?: string;
   avatar?: string;
   coverPhoto?: string;
+  interests?: string[];
 }
 
 /**
