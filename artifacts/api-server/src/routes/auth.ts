@@ -8,11 +8,30 @@ import { sendOtpEmail } from "../lib/mailer";
 
 const router: IRouter = Router();
 
-// In-memory OTP store: key = email or phone, value = { otp, expiresAt }
-const otpStore = new Map<string, { otp: string; expiresAt: number }>();
+// In-memory OTP store: key = email or phone, value = { otp, expiresAt, attempts }
+const otpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
 
 // Pre-verified emails for new-user registration (30 min TTL)
 const preVerifiedEmails = new Map<string, number>();
+
+// Rate limiter for send-otp: key = email, value = { count, windowStart }
+const sendOtpRateLimit = new Map<string, { count: number; windowStart: number }>();
+
+// Rate limiter for verify-otp: max 5 wrong attempts then OTP is invalidated (handled in otpStore.attempts)
+const MAX_SEND_PER_HOUR = 3;
+const MAX_VERIFY_ATTEMPTS = 5;
+
+function checkSendRateLimit(key: string): boolean {
+  const now = Date.now();
+  const entry = sendOtpRateLimit.get(key);
+  if (!entry || now - entry.windowStart > 60 * 60 * 1000) {
+    sendOtpRateLimit.set(key, { count: 1, windowStart: now });
+    return true; // allowed
+  }
+  if (entry.count >= MAX_SEND_PER_HOUR) return false; // blocked
+  entry.count++;
+  return true;
+}
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -27,8 +46,15 @@ router.post("/auth/send-otp", async (req, res): Promise<void> => {
   }
 
   const key = emailOrPhone.trim().toLowerCase();
+
+  // Rate limit: max 3 sends per email per hour
+  if (!checkSendRateLimit(key)) {
+    res.status(429).json({ error: "تجاوزت الحد المسموح به. انتظر ساعة قبل طلب كود جديد" });
+    return;
+  }
+
   const otp = generateOtp();
-  otpStore.set(key, { otp, expiresAt: Date.now() + 10 * 60 * 1000 }); // 10 min
+  otpStore.set(key, { otp, expiresAt: Date.now() + 10 * 60 * 1000, attempts: 0 }); // 10 min
 
   logger.info({ key }, "OTP generated");
 
@@ -89,8 +115,18 @@ router.post("/auth/verify-otp", (req, res): void => {
     return;
   }
 
+  // Brute-force protection: max 5 wrong attempts → invalidate OTP
   if (stored.otp !== otp) {
-    res.status(400).json({ error: "الكود غير صحيح" });
+    stored.attempts++;
+    if (stored.attempts >= MAX_VERIFY_ATTEMPTS) {
+      otpStore.delete(key);
+      res.status(429).json({ error: "تجاوزت عدد المحاولات المسموح بها. اطلب كوداً جديداً" });
+    } else {
+      res.status(400).json({
+        error: "الكود غير صحيح",
+        attemptsLeft: MAX_VERIFY_ATTEMPTS - stored.attempts,
+      });
+    }
     return;
   }
 

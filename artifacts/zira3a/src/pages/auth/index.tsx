@@ -93,13 +93,19 @@ export default function AuthPage() {
     if (code.replace(/\s/g, "").length < 6) return;
     setOtpError("");
 
+    const extractError = (err: unknown): string => {
+      const data = (err as { response?: { data?: { error?: string; attemptsLeft?: number } } })?.response?.data;
+      if (data?.attemptsLeft !== undefined) return `الكود غير صحيح — تبقّى ${data.attemptsLeft} ${data.attemptsLeft === 1 ? "محاولة" : "محاولات"}`;
+      return data?.error ?? "الكود غير صحيح أو منتهي الصلاحية";
+    };
+
     if (userExists) {
       // Existing user → OTP login directly
       otpLoginMutation.mutate(
         { data: { email: email.trim(), otp: code.trim() } },
         {
           onSuccess: (res) => { setToken(res.token); window.location.href = "/feed"; },
-          onError: () => setOtpError("الكود غير صحيح أو منتهي الصلاحية"),
+          onError: (err) => setOtpError(extractError(err)),
         },
       );
     } else {
@@ -111,7 +117,7 @@ export default function AuthPage() {
             if (!res.valid) { setOtpError("الكود غير صحيح، حاول مجدداً"); return; }
             setStep("register");
           },
-          onError: () => setOtpError("الكود غير صحيح أو منتهي الصلاحية"),
+          onError: (err) => setOtpError(extractError(err)),
         },
       );
     }
@@ -142,7 +148,10 @@ export default function AuthPage() {
           setOtp("");
           setStep("otp");
         },
-        onError: () => setError("حدث خطأ، حاول مجدداً"),
+        onError: (err: unknown) => {
+          const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+          setError(msg ?? "حدث خطأ، حاول مجدداً");
+        },
       },
     );
   };
