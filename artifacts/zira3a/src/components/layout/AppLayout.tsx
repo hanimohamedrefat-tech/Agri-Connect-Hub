@@ -108,9 +108,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row max-w-7xl mx-auto border-x border-border/40">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row max-w-7xl mx-auto border-x border-border/40 pb-16 md:pb-0">
       {/* Sidebar */}
-      <aside className="w-full md:w-60 lg:w-72 border-b md:border-b-0 md:border-e border-border/40 flex flex-col sticky top-0 md:h-screen overflow-y-auto">
+      <aside className="hidden md:flex w-full md:w-60 lg:w-72 border-b md:border-b-0 md:border-e border-border/40 flex-col sticky top-0 md:h-screen overflow-y-auto">
         {/* Logo */}
         <div className="p-4 pb-2">
           <div className="px-2 py-3">
@@ -229,8 +229,37 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 min-w-0 border-e border-border/40">
+        {/* Mobile Header (optional if page has its own) */}
+        <div className="md:hidden flex items-center justify-between p-3 border-b border-border/40 sticky top-0 z-30 bg-background/85 backdrop-blur-xl">
+          <ZiraLogo size={32} />
+          <Link href={`/profile/${user.username}`}>
+            <Avatar className="w-8 h-8 border border-border/40">
+              <AvatarImage src={user.avatar || ""} />
+              <AvatarFallback className="text-[10px] font-bold">{(user.displayName || user.username).charAt(0)}</AvatarFallback>
+            </Avatar>
+          </Link>
+        </div>
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border/50 flex items-center justify-around h-16 px-2">
+        {navItems.slice(0, 5).map((item) => {
+          const isActive = location === item.href || (item.href === "/feed" && location === "/");
+          return (
+            <Link key={item.href} href={item.href} className={`flex flex-col items-center gap-1 p-2 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+              <div className="relative">
+                <item.icon className="w-6 h-6" />
+                {item.badge != null && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 bg-rose-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </nav>
 
       {/* Right Sidebar */}
       <aside className="hidden lg:flex flex-col w-80 p-4 gap-4 sticky top-0 h-screen overflow-y-auto">
