@@ -256,10 +256,11 @@ export default function Profile() {
       <Tabs defaultValue="posts" className="w-full">
         <TabsList className="w-full justify-start rounded-none border-b border-border/50 bg-transparent h-11 p-0 gap-0">
           {[
-            { value: "posts", label: t.posts },
-            { value: "replies", label: t.replies },
-            { value: "media", label: t.media },
-          ].map(tab => (
+	            { value: "posts", label: t.posts },
+	            { value: "professional", label: t.professionalProfile },
+	            { value: "replies", label: t.replies },
+	            { value: "media", label: t.media },
+	          ].map(tab => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
@@ -281,6 +282,53 @@ export default function Profile() {
             <div className="p-12 text-center">
               <h3 className="text-lg font-bold mb-1">{t.noPostsYet}</h3>
               <p className="text-muted-foreground text-sm">{t.noPostsYetDesc}</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="professional" className="m-0 p-4 space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold">{t.experience}</h3>
+              {isOwnProfile && <Button size="sm" variant="outline" className="rounded-full">{t.addExperience}</Button>}
+            </div>
+            <div className="text-center py-8 border-2 border-dashed rounded-xl text-muted-foreground">
+              {t.experience} ستظهر هنا
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold">{t.education}</h3>
+              {isOwnProfile && <Button size="sm" variant="outline" className="rounded-full">{t.addEducation}</Button>}
+            </div>
+            <div className="text-center py-8 border-2 border-dashed rounded-xl text-muted-foreground">
+              {t.education} ستظهر هنا
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold">{t.skills}</h3>
+            <div className="flex flex-wrap gap-2">
+              {user.skills?.length ? (
+                user.skills.map(skill => (
+                  <span key={skill} className="bg-muted px-3 py-1 rounded-full text-sm font-medium">
+                    {skill}
+                  </span>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground italic">لا توجد مهارات مضافة</div>
+              )}
+            </div>
+          </div>
+
+          {user.cvUrl && (
+            <div className="pt-4">
+              <Button className="w-full rounded-xl gap-2" variant="secondary" asChild>
+                <a href={user.cvUrl} target="_blank" rel="noreferrer">
+                  {t.cv}
+                </a>
+              </Button>
             </div>
           )}
         </TabsContent>

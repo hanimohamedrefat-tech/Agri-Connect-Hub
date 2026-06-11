@@ -1149,6 +1149,23 @@ components:
           nullable: true
         isVerified:
           type: boolean
+        accountType:
+          type: string
+          enum: [individual, company, expert]
+        skills:
+          type: array
+          items:
+            type: string
+        cvUrl:
+          type: ["string", "null"]
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/Experience"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/Education"
         followersCount:
           type: integer
         followingCount:
@@ -1181,6 +1198,80 @@ components:
           type: array
           items:
             type: string
+        accountType:
+          type: string
+          enum: [individual, company, expert]
+        skills:
+          type: array
+          items:
+            type: string
+        cvUrl:
+          type: string
+
+    Experience:
+      type: object
+      required: [company, position, startDate]
+      properties:
+        id:
+          type: integer
+        company:
+          type: string
+        position:
+          type: string
+        location:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        description:
+          type: string
+        current:
+          type: boolean
+
+    Education:
+      type: object
+      required: [school, degree, startDate]
+      properties:
+        id:
+          type: integer
+        school:
+          type: string
+        degree:
+          type: string
+        fieldOfStudy:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        description:
+          type: string
+
+    Ad:
+      type: object
+      required: [id, title, body, linkUrl, sponsorName]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        body:
+          type: string
+        imageUrl:
+          type: string
+        linkUrl:
+          type: string
+        sponsorName:
+          type: string
+        isActive:
+          type: boolean
+        clicks:
+          type: integer
+        views:
+          type: integer
+        createdAt:
+          type: string
 
     # Posts
     Post:

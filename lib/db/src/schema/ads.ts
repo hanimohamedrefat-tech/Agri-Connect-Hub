@@ -9,6 +9,8 @@ export const adsTable = pgTable("ads", {
   sponsorName: text("sponsor_name").notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  clicks: integer("clicks").notNull().default(0),
+  views: integer("views").notNull().default(0),
 });
 
 export type Ad = typeof adsTable.$inferSelect;

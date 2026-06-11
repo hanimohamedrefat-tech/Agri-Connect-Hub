@@ -17,6 +17,9 @@ export const usersTable = pgTable("users", {
   website: text("website"),
   interests: jsonb("interests").$type<string[]>().default([]).notNull(),
   isVerified: boolean("is_verified").notNull().default(false),
+  accountType: text("account_type").notNull().default("individual"), // individual, company, expert
+  skills: jsonb("skills").$type<string[]>().default([]).notNull(),
+  cvUrl: text("cv_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -33,3 +36,26 @@ export const followsTable = pgTable("follows", {
 });
 
 export type Follow = typeof followsTable.$inferSelect;
+
+export const experienceTable = pgTable("experience", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  company: text("company").notNull(),
+  position: text("position").notNull(),
+  location: text("location"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  description: text("description"),
+  current: boolean("current").notNull().default(false),
+});
+
+export const educationTable = pgTable("education", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  school: text("school").notNull(),
+  degree: text("degree").notNull(),
+  fieldOfStudy: text("field_of_study"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  description: text("description"),
+});

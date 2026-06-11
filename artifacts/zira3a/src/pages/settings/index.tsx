@@ -45,6 +45,9 @@ export default function Settings() {
   const [website, setWebsite] = useState("");
   const [avatar, setAvatar] = useState("");
   const [coverPhoto, setCoverPhoto] = useState("");
+  const [accountType, setAccountType] = useState<"individual" | "company" | "expert">("individual");
+  const [skills, setSkills] = useState("");
+  const [cvUrl, setCvUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
 
@@ -57,6 +60,9 @@ export default function Settings() {
       setWebsite(user.website || "");
       setAvatar(user.avatar || "");
       setCoverPhoto(user.coverPhoto || "");
+      setAccountType((user as any).accountType || "individual");
+      setSkills(((user as any).skills || []).join(", "));
+      setCvUrl((user as any).cvUrl || "");
     }
   }, [user]);
 
@@ -94,7 +100,18 @@ export default function Settings() {
     e.preventDefault();
     if (!user) return;
     updateMutation.mutate(
-      { username: user.username, data: { displayName, bio, specialty, location, website, avatar, coverPhoto } },
+      { username: user.username, data: { 
+        displayName, 
+        bio, 
+        specialty, 
+        location, 
+        website, 
+        avatar, 
+        coverPhoto,
+        accountType,
+        skills: skills.split(",").map(s => s.trim()).filter(Boolean),
+        cvUrl
+      } },
       {
         onSuccess: () => {
           toast({
@@ -331,6 +348,49 @@ export default function Settings() {
                     dir="ltr"
                     className="text-left h-9 text-sm"
                   />
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-border/50">
+                  <h3 className="font-semibold text-sm">{t.professionalProfile}</h3>
+                  
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{t.accountType}</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {["individual", "company", "expert"].map((type) => (
+                        <Button
+                          key={type}
+                          type="button"
+                          variant={accountType === type ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setAccountType(type as any)}
+                          className="rounded-xl text-xs h-9"
+                        >
+                          {(t as any)[type]}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="skills" className="text-xs">{t.skills}</Label>
+                    <Input 
+                      id="skills" 
+                      value={skills} 
+                      onChange={e => setSkills(e.target.value)} 
+                      placeholder={lang === "ar" ? "مثال: مكافحة آفات، تسميد عضوي..." : "e.g. Pest control, Organic fertilization..."} 
+                      className="h-9 text-sm" 
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">{t.cv}</Label>
+                    <div className="flex gap-2">
+                      <Input value={cvUrl} onChange={e => setCvUrl(e.target.value)} placeholder="https://..." className="h-9 text-sm flex-1" />
+                      <Button type="button" variant="outline" size="sm" className="rounded-xl h-9">
+                        <Upload className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

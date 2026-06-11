@@ -290,12 +290,32 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* Footer */}
-        <div className="mt-auto">
-          <p className="text-xs text-muted-foreground text-center">
-            {lang === "ar" ? "© 2026 زراعة" : "© 2026 Zira3a"}
-          </p>
-        </div>
+	        {/* Ads Section */}
+	        <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
+	          <div className="flex items-center justify-between mb-2">
+	            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{lang === "ar" ? "إعلان ممول" : "Sponsored"}</span>
+	            <span className="text-[10px] text-muted-foreground">Ads by Zira3a</span>
+	          </div>
+	          <div className="space-y-2">
+	            <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+	              <img src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=400" alt="Ad" className="w-full h-full object-cover" />
+	            </div>
+	            <h3 className="font-bold text-sm">{lang === "ar" ? "أفضل الأسمدة العضوية" : "Best Organic Fertilizers"}</h3>
+	            <p className="text-xs text-muted-foreground leading-snug">
+	              {lang === "ar" ? "احصل على خصم 20% على أول طلب للأسمدة العضوية لزيادة إنتاجية محاصيلك." : "Get 20% off your first organic fertilizer order to boost crop yields."}
+	            </p>
+	            <Button variant="outline" size="sm" className="w-full rounded-xl text-xs h-8 mt-1">
+	              {lang === "ar" ? "تسوق الآن" : "Shop Now"}
+	            </Button>
+	          </div>
+	        </div>
+
+	        {/* Footer */}
+	        <div className="mt-auto">
+	          <p className="text-xs text-muted-foreground text-center">
+	            {lang === "ar" ? "© 2026 زراعة" : "© 2026 Zira3a"}
+	          </p>
+	        </div>
       </aside>
     </div>
   );
